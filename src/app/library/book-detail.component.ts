@@ -3,7 +3,9 @@ import { NativeScriptCommonModule } from '@nativescript/angular';
 import { Dialogs } from '@nativescript/core';
 import { AppStateService } from '../core/app-state.service';
 import { PlayerService } from '../player/player.service';
+import { SettingsService } from '../settings/settings.service';
 import { CatalogService } from './catalog.service';
+import { DownloadQueueService } from './download-queue.service';
 import { Book, Track } from './library.service';
 import { PodcastService } from './podcast.service';
 
@@ -18,7 +20,9 @@ export class BookDetailComponent {
   readonly catalog = inject(CatalogService);
   readonly state = inject(AppStateService);
   readonly player = inject(PlayerService);
+  readonly queue = inject(DownloadQueueService);
   private readonly podcasts = inject(PodcastService);
+  private readonly settings = inject(SettingsService);
 
   async refresh(): Promise<void> {
     const id = this.book().id;
@@ -50,9 +54,37 @@ export class BookDetailComponent {
       this.catalog.rebuild(id);
       return;
     }
-    await this.catalog.runBusy(`${id}|${track.id}`, async () => {
-      await this.podcasts.download(id, track.id);
-      this.catalog.rebuild(id);
-    }, 'Téléchargement impossible', 'L’épisode n’a pas pu être téléchargé.');
+    if (this.settings.onMobileData() && !this.settings.mobileDownloads()) {
+      const proceed = await Dialogs.confirm({
+        title: 'Réseau mobile',
+        message: 'Vous n’êtes pas en Wi-Fi. Télécharger cet épisode avec les données mobiles ? (réglable dans Options)',
+        okButtonText: 'Télécharger',
+        cancelButtonText: 'Annuler',
+      });
+      if (!proceed) {
+        return;
+      }
+    }
+    this.queue.enqueue(id, track.id);
+  }
+
+  async downloadAll(): Promise<void> {
+    const id = this.book().id;
+    const pending = this.book().tracks.filter((t) => !t.downloaded && !this.queue.find(id, t.id));
+    if (!pending.length) {
+      return;
+    }
+    if (this.settings.onMobileData() && !this.settings.mobileDownloads()) {
+      const proceed = await Dialogs.confirm({
+        title: 'Réseau mobile',
+        message: `Vous n’êtes pas en Wi-Fi. Télécharger ${pending.length} épisodes avec les données mobiles ?`,
+        okButtonText: 'Télécharger',
+        cancelButtonText: 'Annuler',
+      });
+      if (!proceed) {
+        return;
+      }
+    }
+    pending.forEach((t) => this.queue.enqueue(id, t.id));
   }
 }

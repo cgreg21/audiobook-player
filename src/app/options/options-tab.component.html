@@ -26,6 +26,40 @@
   </StackLayout>
 
   <StackLayout class="option-card">
+    <Label text="Podcasts" class="option-title"></Label>
+    <Label text="Actualisation automatique des flux" class="option-label"></Label>
+    <GridLayout columns="*, *, *, *" class="option-chips">
+      <Button
+        *ngFor="let choice of settings.feedIntervals; let i = index"
+        [col]="i"
+        [text]="choice.label"
+        class="option-chip"
+        [class.active]="settings.feedInterval() === choice.value"
+        (tap)="settings.setFeedInterval(choice.value)"
+      ></Button>
+    </GridLayout>
+    <Label text="Les flux sont aussi actualisés à chaque lancement de l’application." class="book-meta" textWrap="true"></Label>
+    <Label text="Téléchargement des épisodes" class="option-label"></Label>
+    <GridLayout columns="*, *" class="option-chips">
+      <Button
+        col="0"
+        text="Wi-Fi uniquement"
+        class="option-chip"
+        [class.active]="!settings.mobileDownloads()"
+        (tap)="settings.setMobileDownloads(false)"
+      ></Button>
+      <Button
+        col="1"
+        text="Données mobiles autorisées"
+        class="option-chip"
+        [class.active]="settings.mobileDownloads()"
+        (tap)="settings.setMobileDownloads(true)"
+      ></Button>
+    </GridLayout>
+    <Label text="En Wi-Fi uniquement, une confirmation est demandée avant un téléchargement sur le réseau mobile." class="book-meta" textWrap="true"></Label>
+  </StackLayout>
+
+  <StackLayout class="option-card">
     <Label text="Stockage" class="option-title"></Label>
     <Label text="Emplacement des nouveaux téléchargements" class="option-label"></Label>
     <GridLayout columns="*, *" class="option-chips">
@@ -86,9 +120,16 @@
     <Label *ngIf="!folders().length" text="Aucun dossier importé." class="book-meta"></Label>
     <GridLayout *ngFor="let folder of folders()" columns="*, auto" class="option-row">
       <Label col="0" [text]="folder.label" class="option-label" textWrap="true" verticalAlignment="center"></Label>
-      <Button col="1" text="Retirer" class="download-button" (tap)="removeFolder(folder)"></Button>
+      <Button col="1" text="&#xe4a6;" class="mi download-button icon-button" (tap)="removeFolder(folder)"></Button>
     </GridLayout>
     <Button [text]="folders().length ? 'Changer de dossier' : '＋  Ajouter un dossier'" class="primary-button" (tap)="importFolder()"></Button>
+    <Button
+      *ngIf="folders().length"
+      [text]="catalog.libraryProgress() ? catalog.libraryProgress()!.done + '/' + catalog.libraryProgress()!.total : '&#xe036;'"
+      [isEnabled]="!catalog.libraryProgress()"
+      class="mi download-button"
+      (tap)="reloadLibrary()"
+    ></Button>
   </StackLayout>
 
   <StackLayout class="option-card">

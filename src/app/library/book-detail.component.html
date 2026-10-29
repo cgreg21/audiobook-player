@@ -4,28 +4,50 @@
   <Label [text]="catalog.bookSummary(book())" class="book-meta detail-meta"></Label>
   <Button [text]="catalog.resumeLabel(book())" class="primary-button detail-play" (tap)="catalog.play(book())"></Button>
 
-  <GridLayout *ngIf="book().kind === 'podcast'" columns="*, *" class="detail-actions">
+  <GridLayout *ngIf="book().kind === 'podcast'" columns="*, *, *" class="detail-actions">
     <Button
       col="0"
-      [text]="catalog.isBusy(book().id) ? 'Actualisation…' : 'Actualiser'"
+      text="&#xe036;"
       [isEnabled]="!catalog.isBusy(book().id)"
-      class="secondary-button"
+      class="mi secondary-button"
       (tap)="refresh()"
     ></Button>
-    <Button col="1" text="Se désabonner" class="secondary-button danger" (tap)="unsubscribe()"></Button>
+    <Button col="1" text="&#xe1ac;" class="mi secondary-button" (tap)="downloadAll()"></Button>
+    <Button col="2" text="&#xe4a6;" class="mi secondary-button danger" (tap)="unsubscribe()"></Button>
   </GridLayout>
 
-  <GridLayout *ngFor="let track of book().tracks; let i = index" columns="auto, *, auto" class="track-row" [class.current]="player.book()?.id === book().id && player.trackIndex() === i">
+  <ng-container *ngFor="let track of book().tracks; let i = index">
+  <ng-container *ngIf="{ item: queue.find(book().id, track.id) } as dl">
+  <GridLayout columns="auto, *, auto" class="track-row" [class.current]="player.book()?.id === book().id && player.trackIndex() === i">
     <Label col="0" [text]="i + 1" class="track-index" (tap)="catalog.play(book(), i)"></Label>
-    <Label col="1" [text]="track.name" class="track-title" textWrap="true" (tap)="catalog.play(book(), i)"></Label>
-    <Button
-      *ngIf="book().kind === 'podcast'"
-      col="2"
-      [text]="catalog.isBusy(book().id + '|' + track.id) ? '…' : track.downloaded ? '✓ Hors ligne' : '↓ Télécharger'"
-      [isEnabled]="!catalog.isBusy(book().id + '|' + track.id)"
-      class="download-button"
-      [class.done]="track.downloaded"
-      (tap)="toggleDownload(track)"
-    ></Button>
+    <StackLayout col="1" verticalAlignment="center">
+      <Label [text]="track.name" class="track-title" textWrap="true" (tap)="catalog.play(book(), i)"></Label>
+      <GridLayout *ngIf="dl.item" class="progress-track dl-track">
+        <StackLayout class="progress-fill" originX="0" [scaleX]="queue.fraction(dl.item)"></StackLayout>
+      </GridLayout>
+      <Label *ngIf="dl.item?.status === 'error'" [text]="'Échec : ' + dl.item?.error" class="book-meta" textWrap="true"></Label>
+    </StackLayout>
+    <StackLayout *ngIf="book().kind === 'podcast'" col="2" orientation="horizontal" verticalAlignment="center">
+      <ng-container *ngIf="dl.item as item; else plain">
+        <Label [text]="item.status === 'queued' ? 'En attente' : item.status === 'paused' ? 'Pause' : queue.percent(item) + ' %'" class="book-meta dl-percent" verticalAlignment="center"></Label>
+        <Button
+          [text]="item.status === 'downloading' || item.status === 'queued' ? '\ue39e' : item.status === 'error' ? '\ue036' : '\ue3d0'"
+          class="mi download-button icon-button"
+          [isEnabled]="item.status !== 'queued'"
+          (tap)="item.status === 'downloading' ? queue.pause(item.key) : queue.resume(item.key)"
+        ></Button>
+        <Button text="&#xe4f6;" class="mi download-button icon-button" (tap)="queue.cancel(item.key)"></Button>
+      </ng-container>
+      <ng-template #plain>
+        <Button
+          [text]="track.downloaded ? '\ue4a6' : '\ue20c'"
+          class="mi download-button icon-button"
+          [class.delete]="track.downloaded"
+          (tap)="toggleDownload(track)"
+        ></Button>
+      </ng-template>
+    </StackLayout>
   </GridLayout>
+  </ng-container>
+  </ng-container>
 </StackLayout>

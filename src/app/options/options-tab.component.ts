@@ -30,7 +30,7 @@ export class OptionsTabComponent implements OnInit {
   readonly settings = inject(SettingsService);
   readonly updates = inject(UpdateService);
   readonly version = this.updates.currentVersion();
-  private readonly catalog = inject(CatalogService);
+  protected readonly catalog = inject(CatalogService);
   private readonly library = inject(LibraryService);
   private readonly podcasts = inject(PodcastService);
   private readonly database = inject(DatabaseService);
@@ -95,6 +95,15 @@ export class OptionsTabComponent implements OnInit {
       this.catalog.rebuild();
       this.refresh();
     }
+  }
+
+  reloadLibrary(): void {
+    try {
+      this.catalog.reloadFolders();
+    } catch {
+      this.state.showError('Actualisation impossible', 'Le dossier n’a pas pu être lu.');
+    }
+    this.refresh();
   }
 
   async importFolder(): Promise<void> {

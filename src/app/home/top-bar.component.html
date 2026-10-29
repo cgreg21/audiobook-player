@@ -4,16 +4,16 @@
   </StackLayout>
   <Label
     col="1"
-    text="●"
-    class="net-badge"
+    text="&#xecde;"
+    class="mi net-badge"
     [class.offline]="!state.online()"
     verticalAlignment="center"
   ></Label>
   <Label
     appPress
     col="2"
-    text="⚙"
-    class="brand-mark"
+    text="&#xe270;"
+    class="mi brand-mark"
     [class.active]="state.activeTab() === 'options'"
     (tap)="state.setTab('options')"
     verticalAlignment="center"

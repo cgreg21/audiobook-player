@@ -8,11 +8,50 @@
       class="search-input"
       (returnPress)="search($any(searchField).text)"
     ></TextField>
-    <Button col="1" text="Chercher" class="search-button" (tap)="search($any(searchField).text)"></Button>
+    <Button col="1" text="&#xe30c;" class="mi search-button" (tap)="search($any(searchField).text)"></Button>
   </GridLayout>
 
+  <StackLayout *ngIf="queue.items().length && !catalog.searchResults().length">
+    <GridLayout columns="*, auto, auto, auto" rows="auto" class="sub-heading">
+      <Label col="0" [text]="'TÉLÉCHARGEMENTS (' + queue.items().length + ')'" class="eyebrow" verticalAlignment="center"></Label>
+      <Label appPress col="1" text="&#xe39e;" class="mi refresh-button" (tap)="queue.pauseAll()"></Label>
+      <Label appPress col="2" text="&#xe3d0;" class="mi refresh-button" (tap)="queue.resumeAll()"></Label>
+      <Label appPress col="3" text="&#xe4f6;" class="mi refresh-button" (tap)="queue.cancelAll()"></Label>
+    </GridLayout>
+    <GridLayout *ngFor="let item of queue.items()" columns="*, auto, auto" rows="auto, auto" class="track-row">
+      <Label col="0" row="0" [text]="item.title" class="book-title" textWrap="true"></Label>
+      <Label
+        col="0"
+        row="1"
+        [text]="item.status === 'error' ? (item.error || 'Erreur') : item.status === 'queued' ? 'En attente' : item.status === 'paused' ? 'En pause · ' + queue.percent(item) + ' %' : queue.percent(item) + ' %'"
+        class="book-meta"
+      ></Label>
+      <Label
+        appPress
+        col="1"
+        rowSpan="2"
+        [text]="item.status === 'downloading' || item.status === 'queued' ? '&#xe39e;' : item.status === 'error' ? '&#xe036;' : '&#xe3d0;'"
+        class="mi refresh-button"
+        (tap)="item.status === 'downloading' || item.status === 'queued' ? queue.pause(item.key) : queue.resume(item.key)"
+        verticalAlignment="center"
+      ></Label>
+      <Label appPress col="2" rowSpan="2" text="&#xe4f6;" class="mi refresh-button" (tap)="queue.cancel(item.key)" verticalAlignment="center"></Label>
+    </GridLayout>
+  </StackLayout>
+
   <StackLayout *ngIf="catalog.subscribedBooks().length && !catalog.searchResults().length && !searching()">
-    <Label text="MES ABONNEMENTS" class="eyebrow"></Label>
+    <GridLayout columns="*, auto" rows="auto" class="sub-heading">
+      <Label col="0" text="MES ABONNEMENTS" class="eyebrow" verticalAlignment="center"></Label>
+      <Label
+        appPress
+        col="1"
+        text="&#xe036;"
+        class="mi refresh-button"
+        [class.busy]="catalog.refreshing()"
+        (tap)="!catalog.refreshing() && catalog.refreshFeeds()"
+        verticalAlignment="center"
+      ></Label>
+    </GridLayout>
     <app-book-row *ngFor="let book of catalog.subscribedBooks()" [book]="book" (opened)="state.openBook(book)"></app-book-row>
   </StackLayout>
 
@@ -31,9 +70,9 @@
     </StackLayout>
     <Button
       col="2"
-      [text]="isSubscribed(result) ? '✓ Suivi' : catalog.isBusy(result.feedUrl) ? '…' : '＋ Suivre'"
+      [text]="isSubscribed(result) ? '&#xe182;' : catalog.isBusy(result.feedUrl) ? '&#xe036;' : '&#xe3d4;'"
       [isEnabled]="!isSubscribed(result) && !catalog.isBusy(result.feedUrl)"
-      class="download-button"
+      class="mi download-button icon-button"
       [class.done]="isSubscribed(result)"
       (tap)="subscribe(result)"
     ></Button>

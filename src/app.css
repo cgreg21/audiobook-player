@@ -50,7 +50,7 @@
 }
 
 .topbar {
-  padding: 22 22 18;
+  padding: 22 20 18;
 }
 
 .topbar-copy {
@@ -225,7 +225,7 @@
 }
 
 .progress-fill {
-  background-color: var(--coral);
+  background-color: var(--accent);
   border-radius: 4;
 }
 
@@ -244,8 +244,6 @@
 .play-round-icon {
   color: #ffffff;
   font-size: 22;
-  padding-left: 3;
-  padding-bottom: 3;
 }
 
 .mini-player {
@@ -255,7 +253,7 @@
 }
 
 .mini-main {
-  padding: 10 16;
+  padding: 10 20;
 }
 
 .mini-cover {
@@ -342,7 +340,7 @@
 }
 
 .option-chips {
-  margin-top: 8;
+  margin: 8 -3 0;
 }
 
 .option-chip {
@@ -352,12 +350,29 @@
   font-size: 12;
   height: 40;
   margin: 0 3;
+  padding: 0 2;
   text-transform: none;
+  white-space: nowrap;
 }
 
 .option-chip.active {
   background-color: var(--accent);
   color: #ffffff;
+}
+
+.filter-chip {
+  font-size: 11;
+  height: 32;
+  margin: 0;
+  padding: 0 10;
+}
+
+.dl-track {
+  margin-top: 6;
+}
+
+.dl-percent {
+  margin: 0 4 0 0;
 }
 
 .danger-button {
@@ -403,6 +418,42 @@
   margin-top: 4;
 }
 
+.status-icon {
+  font-size: 20;
+  margin-left: 8;
+  color: var(--muted);
+}
+
+.status-new-dot {
+  background-color: var(--ok-text);
+  border-color: var(--surface);
+  border-radius: 11;
+  border-width: 3;
+  height: 22;
+  margin: 4 0 0 4;
+  width: 22;
+}
+
+.library-progress {
+  margin-bottom: 18;
+}
+
+.library-progress-bar {
+  margin-top: 6;
+}
+
+.library-progress-label {
+  margin-top: 4;
+}
+
+.status-progress {
+  color: var(--accent);
+}
+
+.status-done {
+  color: var(--ok-text);
+}
+
 .back-link {
   color: var(--accent-text);
   font-size: 13;
@@ -421,7 +472,7 @@
 }
 
 .detail-actions {
-  margin-bottom: 14;
+  margin: 0 -4 14;
 }
 
 .secondary-button {
@@ -436,6 +487,10 @@
 
 .secondary-button.danger {
   color: var(--coral);
+}
+
+.secondary-button.mi {
+  font-size: 22;
 }
 
 .track-row {
@@ -469,6 +524,11 @@
   text-transform: none;
 }
 
+.download-button.delete {
+  background-color: var(--err-bg);
+  color: var(--coral);
+}
+
 .download-button.done {
   background-color: var(--ok-bg);
   color: var(--ok-text);
@@ -494,7 +554,9 @@
   font-size: 12;
   height: 44;
   margin: 0 0 0 8;
+  padding: 0;
   text-transform: none;
+  width: 44;
 }
 
 .search-spinner {
@@ -517,11 +579,13 @@
 
 .player-times {
   margin-bottom: 8;
+  padding: 0 16;
 }
 
 .player-time {
   color: var(--accent);
   font-size: 11;
+  text-align: left;
 }
 
 .player-time.end {
@@ -606,7 +670,7 @@
 
 .player-content {
   horizontal-align: center;
-  padding: 8 24;
+  padding: 8 24 48;
   text-align: center;
   vertical-align: center;
 }
@@ -736,7 +800,7 @@
 }
 
 .player-wide {
-  padding: 8 24;
+  padding: 8 24 48;
 }
 
 .player-wide .player-art {
@@ -746,3 +810,66 @@
 .player-side {
   padding: 0 8;
 }
+
+.mi {
+  font-family: phosphor, "Phosphor-Light";
+  font-weight: normal;
+}
+
+.control-main.mi {
+  font-size: 40;
+}
+
+.control-skip.mi {
+  font-size: 40;
+}
+
+.control-seek.mi {
+  font-size: 36;
+}
+
+.mini-toggle-icon.mi,
+.play-round-icon.mi {
+  font-size: 26;
+}
+
+.search-button.mi {
+  font-size: 24;
+}
+
+.net-badge.mi {
+  font-size: 64;
+}
+
+.sub-heading {
+  margin-bottom: 8;
+}
+
+.refresh-button {
+  color: var(--accent-text);
+  font-size: 24;
+  padding: 4 0 4 8;
+  vertical-align: center;
+}
+
+.download-button.icon-button {
+  font-size: 22;
+  padding: 0;
+  width: 44;
+}
+
+.refresh-button.busy {
+  opacity: 0.4;
+}
+
+.drawer-layer { background-color: transparent; }
+.drawer-header { padding: 0; }
+.drawer-handle { background-color: var(--muted); border-radius: 2; height: 4; horizontal-align: center; margin: 10 0; opacity: 0.6; width: 44; }
+.drawer-scrim { background-color: #99000000; }
+.drawer { background-color: var(--surface); border-radius: 20 20 0 0; padding: 0; }
+.drawer-title { font-size: 15; font-weight: bold; color: var(--text); padding: 0 20 10 20; }
+.drawer-row { padding: 12 20; }
+.drawer-row.current { background-color: var(--surface2); }
+.drawer-state { color: var(--accent); font-size: 22; width: 36; }
+.drawer-name { color: var(--text); font-size: 14; }
+.drawer-status { color: var(--muted); font-size: 11; }

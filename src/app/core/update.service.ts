@@ -30,11 +30,12 @@ export class UpdateService {
     this.status.set('checking');
     this.message.set('');
     try {
-      const releases = (await Http.getJson<any[]>({
+      const response = await Http.request({
         url: `https://api.github.com/repos/${REPO}/releases?per_page=10`,
         method: 'GET',
         headers: { Accept: 'application/vnd.github+json' },
-      })) as any[];
+      });
+      const releases = response.content?.toJSON() as any[];
       const release = releases.find((r) => !r.draft && r.assets?.some((a: any) => /\.apk$/.test(a.name)));
       if (!release) {
         this.status.set('uptodate');

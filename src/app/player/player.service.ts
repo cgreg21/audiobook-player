@@ -30,6 +30,8 @@ export class PlayerService {
   private readonly readTick = signal(0);
   private readonly readCache = new Map<string, Set<number>>();
   private lastObserved: { bookId: string; index: number; ratio: number } | null = null;
+  // The controller applies load() asynchronously: until it reports the saved spot, its state is stale and must not be saved.
+  private pendingResume: { index: number; positionMs: number; since: number; retried: boolean } | null = null;
 
   private get bridge(): any {
     return org.nativescript.audiobookplayer.PlayerBridge;
@@ -60,7 +62,8 @@ export class PlayerService {
     this.book.set(book);
     this.trackIndex.set(index);
     this.positionMs.set(positionMs);
-    this.bridge.load(uris, titles, book.title, book.artwork ?? '', index, positionMs, true);
+    this.pendingResume = positionMs > 0 || index > 0 ? { index, positionMs, since: Date.now(), retried: false } : null;
+    this.bridge.load(uris, titles, book.title, book.artwork ? this.toPlayableUri(book.artwork) : '', index, positionMs, true);
     this.startPolling();
   }
 
@@ -143,6 +146,9 @@ export class PlayerService {
     }
     const wasPlaying = this.playing();
     this.playing.set(this.bridge.isPlaying());
+    if (this.pendingResume && !this.checkResumed(this.pendingResume)) {
+      return;
+    }
     if (wasPlaying && !this.playing()) {
       this.saveProgress();
     }
@@ -152,13 +158,33 @@ export class PlayerService {
     this.trackReadChapters();
   }
 
+  private checkResumed(target: { index: number; positionMs: number; since: number; retried: boolean }): boolean {
+    const atTarget =
+      this.bridge.trackIndex() === target.index &&
+      Number(this.bridge.duration()) > 0 &&
+      Math.abs(Number(this.bridge.position()) - target.positionMs) < 5000;
+    if (atTarget) {
+      this.pendingResume = null;
+      return true;
+    }
+    const waited = Date.now() - target.since;
+    if (waited > 3000 && !target.retried && Number(this.bridge.duration()) > 0) {
+      target.retried = true;
+      this.bridge.seekToTrack(target.index);
+      this.bridge.seekTo(target.positionMs);
+    } else if (waited > 8000) {
+      this.pendingResume = null;
+    }
+    return false;
+  }
+
   private readProgress(bookId: string): Progress {
     return this.db.getProgress(bookId);
   }
 
   private saveProgress(): void {
     const book = this.book();
-    if (book && this.bridge.isConnected() && Number(this.bridge.duration()) > 0) {
+    if (book && !this.pendingResume && this.bridge.isConnected() && Number(this.bridge.duration()) > 0) {
       const progress: Progress = {
         index: this.bridge.trackIndex(),
         positionMs: Number(this.bridge.position()),
@@ -176,6 +202,11 @@ export class PlayerService {
   bookFraction(book: Book): number {
     this.readTick();
     return Math.min(1, this.readSet(book.id).size / Math.max(1, book.tracks.length));
+  }
+
+  isChapterRead(bookId: string, index: number): boolean {
+    this.readTick();
+    return this.readSet(bookId).has(index);
   }
 
   private readSet(bookId: string): Set<number> {

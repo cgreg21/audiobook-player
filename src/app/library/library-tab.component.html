@@ -1,15 +1,27 @@
 <StackLayout class="screen-content">
   <app-continue-card></app-continue-card>
 
+  <StackLayout *ngIf="catalog.libraryProgress() as progress" class="library-progress">
+    <GridLayout columns="*, auto" rows="auto">
+      <Label col="0" text="Mise à jour de la bibliothèque…" class="book-meta"></Label>
+      <Label col="1" [text]="progress.done + '/' + progress.total" class="book-meta"></Label>
+    </GridLayout>
+    <GridLayout class="progress-track library-progress-bar">
+      <StackLayout class="progress-fill" originX="0" [scaleX]="progress.total ? progress.done / progress.total : 0"></StackLayout>
+    </GridLayout>
+    <Label [text]="progress.label" class="book-meta library-progress-label" textWrap="false"></Label>
+  </StackLayout>
+
   <GridLayout columns="*, auto" class="section-heading">
-    <StackLayout col="0">
+    <StackLayout col="0" verticalAlignment="center">
       <Label text="Ma collection" class="section-title"></Label>
     </StackLayout>
-    <Label col="1" [text]="catalog.books().length + (catalog.books().length > 1 ? ' livres' : ' livre')" class="collection-count" verticalAlignment="center"></Label>
+    <Button col="1" [text]="filterLabel() + '  \u25BE'" class="option-chip filter-chip active" verticalAlignment="center" (tap)="pickFilter()"></Button>
   </GridLayout>
 
   <StackLayout *ngIf="catalog.books().length">
-    <app-book-row *ngFor="let book of catalog.books()" [book]="book" (opened)="state.selectedBook.set(book)"></app-book-row>
+    <app-book-row *ngFor="let book of visibleBooks()" [book]="book" (opened)="state.selectedBook.set(book)"></app-book-row>
+    <Label *ngIf="!visibleBooks().length" text="Aucun élément pour ce filtre." class="empty-description"></Label>
   </StackLayout>
 
   <StackLayout *ngIf="!catalog.books().length" class="empty-card">

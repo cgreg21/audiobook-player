@@ -16,6 +16,18 @@ export interface Book {
   tracks: Track[];
   kind?: 'folder' | 'podcast';
   artwork?: string;
+  author?: string;
+  addedAt?: number;
+}
+
+// Informations d'un livre issues des tags des fichiers puis, si besoin, des API en ligne.
+export interface BookTags {
+  sig: string;
+  title?: string;
+  author?: string;
+  artwork?: string;
+  names?: string[];
+  online?: boolean;
 }
 
 const PICK_REQUEST = 4201;
@@ -45,7 +57,107 @@ export class LibraryService {
         // Folder removed or permission revoked: ignore it.
       }
     }
-    return books;
+    return books.map((book) => {
+      const tags = this.cachedTags(book);
+      return tags ? this.applyTags(book, tags) : book;
+    });
+  }
+
+  cachedTags(book: Book): BookTags | null {
+    const raw = this.db.getSetting(`tags:${book.id}`, '');
+    if (!raw) {
+      return null;
+    }
+    try {
+      const tags = JSON.parse(raw) as BookTags;
+      return tags.sig === this.tagSignature(book) ? tags : null;
+    } catch {
+      return null;
+    }
+  }
+
+  saveTags(book: Book, tags: BookTags): void {
+    this.db.setSetting(`tags:${book.id}`, JSON.stringify(tags));
+  }
+
+  tagSignature(book: Book): string {
+    return `${book.tracks.length}:${book.addedAt ?? 0}`;
+  }
+
+  applyTags(book: Book, tags: BookTags): Book {
+    const tracks = book.tracks.map((track, i) => {
+      const name = tags.names?.[i];
+      return name ? { ...track, name } : track;
+    });
+    return {
+      ...book,
+      tracks,
+      title: tags.title || book.title,
+      author: tags.author || book.author,
+      artwork: tags.artwork || book.artwork,
+    };
+  }
+
+  // Lit les tags embarqués (album, artiste, titres des pistes, pochette) ; cède la main entre deux fichiers.
+  async readTags(book: Book): Promise<BookTags> {
+    const tags: BookTags = { sig: this.tagSignature(book) };
+    const context = Utils.android.getApplicationContext();
+    const retriever = new android.media.MediaMetadataRetriever();
+    const keys = android.media.MediaMetadataRetriever;
+    const names: string[] = [];
+    try {
+      for (let i = 0; i < book.tracks.length; i++) {
+        let title = '';
+        try {
+          retriever.setDataSource(context, android.net.Uri.parse(book.tracks[i].uri));
+          title = (retriever.extractMetadata(keys.METADATA_KEY_TITLE) ?? '').trim();
+          if (!tags.title) {
+            tags.title = (retriever.extractMetadata(keys.METADATA_KEY_ALBUM) ?? '').trim() || undefined;
+          }
+          if (!tags.author) {
+            const author =
+              retriever.extractMetadata(keys.METADATA_KEY_ALBUMARTIST) ||
+              retriever.extractMetadata(keys.METADATA_KEY_ARTIST) ||
+              retriever.extractMetadata(keys.METADATA_KEY_AUTHOR);
+            tags.author = author?.trim() || undefined;
+          }
+          if (!tags.artwork && i < 3) {
+            tags.artwork = this.saveCover(book.id, retriever.getEmbeddedPicture());
+          }
+        } catch {
+          // Fichier illisible : on garde son nom.
+        }
+        names.push(title);
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+    } finally {
+      retriever.release();
+    }
+    // Des titres identiques d'un fichier à l'autre ne distinguent rien : on garde les noms de fichiers.
+    if (new Set(names.filter(Boolean)).size > 1 || (names.length === 1 && names[0])) {
+      tags.names = names;
+    }
+    return tags;
+  }
+
+  coverPath(bookId: string): string {
+    const dir = new java.io.File(Utils.android.getApplicationContext().getFilesDir(), 'covers');
+    dir.mkdirs();
+    return `${dir.getAbsolutePath()}/${Math.abs(new java.lang.String(bookId).hashCode())}.jpg`;
+  }
+
+  private saveCover(bookId: string, bytes: any): string | undefined {
+    if (!bytes || !bytes.length) {
+      return undefined;
+    }
+    const path = this.coverPath(bookId);
+    const out = new java.io.FileOutputStream(path);
+    try {
+      out.write(bytes);
+    } finally {
+      out.close();
+    }
+    return path;
   }
 
   folders(): string[] {
@@ -99,7 +211,7 @@ export class LibraryService {
       .getContentResolver()
       .query(
         docs.buildChildDocumentsUriUsingTree(treeUri, docId),
-        [columns.COLUMN_DOCUMENT_ID, columns.COLUMN_DISPLAY_NAME, columns.COLUMN_MIME_TYPE],
+        [columns.COLUMN_DOCUMENT_ID, columns.COLUMN_DISPLAY_NAME, columns.COLUMN_MIME_TYPE, columns.COLUMN_LAST_MODIFIED],
         null,
         null,
         null,
@@ -108,6 +220,7 @@ export class LibraryService {
       return;
     }
     const tracks: Track[] = [];
+    let addedAt = 0;
     const folders: { id: string; name: string }[] = [];
     try {
       while (cursor.moveToNext()) {
@@ -116,7 +229,8 @@ export class LibraryService {
         const mime = cursor.getString(2);
         if (mime === columns.MIME_TYPE_DIR) {
           folders.push({ id, name });
-        } else if (/\.mp3$/i.test(name) || mime === 'audio/mpeg') {
+        } else if (/\.(mp3|m4a|m4b|aac|ogg|oga|opus|flac|wav)$/i.test(name) || (mime ?? '').startsWith('audio/')) {
+          addedAt = Math.max(addedAt, Number(cursor.getLong(3)));
           tracks.push({ name, uri: docs.buildDocumentUriUsingTree(treeUri, id).toString() });
         }
       }
@@ -126,7 +240,12 @@ export class LibraryService {
 
     if (tracks.length) {
       tracks.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
-      books.push({ id: `${treeUri.toString()}|${docId}`, title: folderName.replace(/_+/g, ' ').trim(), tracks });
+      books.push({
+        id: `${treeUri.toString()}|${docId}`,
+        title: folderName.replace(/_+/g, ' ').trim(),
+        tracks,
+        addedAt: addedAt || undefined,
+      });
     }
     for (const folder of folders) {
       if (folder.name === PODCASTS_DIR) {

@@ -1,13 +1,15 @@
 import { Component, inject, NO_ERRORS_SCHEMA, signal } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
 import { AppStateService } from '../core/app-state.service';
+import { PressDirective } from '../core/motion.directives';
 import { BookRowComponent } from '../library/book-row.component';
 import { CatalogService } from '../library/catalog.service';
+import { DownloadQueueService } from '../library/download-queue.service';
 import { PodcastResult, PodcastService } from '../library/podcast.service';
 
 @Component({
   selector: 'app-podcasts-tab',
-  imports: [NativeScriptCommonModule, BookRowComponent],
+  imports: [NativeScriptCommonModule, BookRowComponent, PressDirective],
   schemas: [NO_ERRORS_SCHEMA],
   templateUrl: './podcasts-tab.component.html',
 })
@@ -15,6 +17,7 @@ export class PodcastsTabComponent {
   readonly catalog = inject(CatalogService);
   readonly state = inject(AppStateService);
   private readonly podcasts = inject(PodcastService);
+  readonly queue = inject(DownloadQueueService);
   readonly searching = signal(false);
 
   async search(term: string): Promise<void> {

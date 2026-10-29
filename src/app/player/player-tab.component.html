@@ -33,11 +33,11 @@
   </GridLayout>
 
   <GridLayout rows="auto" columns="*, *, auto, *, *" class="player-controls">
-    <Label col="0" text="«" class="control control-skip" (tap)="player.skipTo(player.trackIndex() - 1)"></Label>
-    <Label col="1" text="↺" class="control control-seek" (tap)="player.seekBy(-15000)"></Label>
-    <Label col="2" [text]="player.playing() ? '❚❚' : '▶'" class="control-main" (tap)="player.toggle()"></Label>
-    <Label col="3" text="↻" class="control control-seek" (tap)="player.seekBy(30000)"></Label>
-    <Label col="4" text="»" class="control control-skip" (tap)="player.skipTo(player.trackIndex() + 1)"></Label>
+    <Label col="0" text="&#xe5a4;" class="mi control control-skip" (tap)="player.skipTo(player.trackIndex() - 1)"></Label>
+    <Label col="1" text="&#xe6a8;" class="mi control control-seek" (tap)="player.seekBy(-15000)"></Label>
+    <Label col="2" [text]="player.playing() ? '\ue39e' : '\ue3d0'" class="mi control-main" (tap)="player.toggle()"></Label>
+    <Label col="3" text="&#xe6a6;" class="mi control control-seek" (tap)="player.seekBy(30000)"></Label>
+    <Label col="4" text="&#xe5a6;" class="mi control control-skip" (tap)="player.skipTo(player.trackIndex() + 1)"></Label>
   </GridLayout>
 </ng-template>
 
@@ -51,6 +51,7 @@
   <Button text="Découvrir ma bibliothèque" class="primary-button player-button" (tap)="state.setTab('library')"></Button>
 </ng-template>
 
+<GridLayout>
 <ng-container *ngIf="player.book() as book; else idle">
   <StackLayout *ngIf="!state.landscape(); else wide" class="player-content">
     <ng-container *ngTemplateOutlet="art; context: { $implicit: book }"></ng-container>
@@ -71,7 +72,6 @@
 
 <ng-template #idle>
   <StackLayout *ngIf="!state.landscape(); else idleWide" class="player-content">
-    <Label text="LECTEUR AUDIO" class="eyebrow player-eyebrow"></Label>
     <ng-container *ngTemplateOutlet="art; context: { $implicit: null }"></ng-container>
     <ng-container *ngTemplateOutlet="idleText"></ng-container>
   </StackLayout>
@@ -85,3 +85,28 @@
     </GridLayout>
   </ng-template>
 </ng-template>
+<GridLayout *ngIf="player.book() as open" class="drawer-layer">
+  <GridLayout class="drawer-scrim" [opacity]="scrimOpacity()" [visibility]="drawerProgress() > 0.02 ? 'visible' : 'collapse'" (tap)="closeDrawer()"></GridLayout>
+  <GridLayout #drawer rows="auto, auto" class="drawer" verticalAlignment="bottom" [height]="drawerHeight()" [translateY]="closedY()">
+    <GridLayout row="0" rows="auto, auto" class="drawer-header" (pan)="onPan($any($event))" (tap)="toggleDrawer()">
+      <StackLayout row="0" class="drawer-handle"></StackLayout>
+      <Label row="1" [text]="'Chapitres · ' + open.title" class="drawer-title" textWrap="false"></Label>
+    </GridLayout>
+    <ScrollView row="1" [height]="drawerHeight() - 64">
+      <StackLayout>
+        <GridLayout
+          *ngFor="let track of open.tracks; let i = index"
+          columns="auto, *, auto"
+          class="drawer-row"
+          [class.current]="i === player.trackIndex()"
+          (tap)="playChapter(i)"
+        >
+          <Label col="0" [text]="i === player.trackIndex() ? (player.playing() ? '\ue44a' : '\ue39e') : player.isChapterRead(open.id, i) ? '\ue184' : ''" class="mi drawer-state" verticalAlignment="center"></Label>
+          <Label col="1" [text]="track.name" class="drawer-name" verticalAlignment="center"></Label>
+          <Label col="2" [text]="i === player.trackIndex() ? 'En cours' : player.isChapterRead(open.id, i) ? 'Terminé' : ''" class="drawer-status" verticalAlignment="center"></Label>
+        </GridLayout>
+      </StackLayout>
+    </ScrollView>
+  </GridLayout>
+</GridLayout>
+</GridLayout>

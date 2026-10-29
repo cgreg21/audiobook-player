@@ -6,7 +6,7 @@
       <Label [text]="book.title" class="mini-subtitle"></Label>
     </StackLayout>
     <GridLayout appPress col="2" class="mini-toggle" verticalAlignment="center" (tap)="player.toggle()">
-      <Label [text]="player.playing() ? '❚❚' : '▶'" class="mini-toggle-icon" horizontalAlignment="center" verticalAlignment="center"></Label>
+      <Label [text]="player.playing() ? '\ue39e' : '\ue3d0'" class="mi mini-toggle-icon" horizontalAlignment="center" verticalAlignment="center"></Label>
     </GridLayout>
   </GridLayout>
   <GridLayout row="1" class="mini-progress">

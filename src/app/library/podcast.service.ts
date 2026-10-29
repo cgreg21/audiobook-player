@@ -70,6 +70,10 @@ export class PodcastService {
       return;
     }
     const fresh = await this.fetchEpisodes(feedUrl);
+    const known = new Set(podcast.episodes.map((e) => e.id));
+    if (fresh.some((e) => !known.has(e.id))) {
+      this.db.setSetting(`newep:${feedUrl}`, String(Date.now()));
+    }
     const downloaded = new Map(podcast.episodes.filter((e) => e.localPath).map((e) => [e.id, e.localPath]));
     podcast.episodes = fresh.map((e) => ({ ...e, localPath: downloaded.get(e.id) }));
     this.save(podcast);
@@ -82,10 +86,11 @@ export class PodcastService {
     this.db.deletePodcast(feedUrl);
   }
 
-  async download(feedUrl: string, episodeId: string): Promise<void> {
+  // Creates the destination (shared folder document or local file path) for an episode download.
+  prepareDownload(feedUrl: string, episodeId: string): { url: string; target: string } | null {
     const episode = this.findEpisode(feedUrl, episodeId);
     if (!episode || episode.localPath) {
-      return;
+      return null;
     }
     const podcast = this.podcasts.find((p) => p.feedUrl === feedUrl);
     const feedName = this.safeName(podcast?.title) || this.hash(feedUrl);
@@ -93,30 +98,24 @@ export class PodcastService {
     const fileName = `${this.safeName(episode.title) || 'episode'}-${this.hash(episode.id)}.${extension}`;
     const shared = this.library.createPodcastFile(feedName, fileName, 'audio/mpeg');
     if (shared) {
-      await this.streamToUri(episode.remoteUrl, shared);
-      episode.localPath = shared;
-    } else {
-      const folder = new java.io.File(this.settings.downloadsRoot(), feedName);
-      folder.mkdirs();
-      const target = `${folder.getAbsolutePath()}/${fileName}`;
-      await this.streamToFile(episode.remoteUrl, target);
-      episode.localPath = target;
+      return { url: episode.remoteUrl, target: shared };
     }
-    this.save(podcast!);
+    const folder = new java.io.File(this.settings.downloadsRoot(), feedName);
+    folder.mkdirs();
+    return { url: episode.remoteUrl, target: `${folder.getAbsolutePath()}/${fileName}` };
   }
 
-  private streamToUri(url: string, targetUri: string): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      org.nativescript.audiobookplayer.Downloader.downloadToUri(
-        Utils.android.getApplicationContext(),
-        url,
-        targetUri,
-        new org.nativescript.audiobookplayer.Downloader.Callback({
-          onDone: () => resolve(),
-          onError: (message: string) => reject(new Error(message)),
-        }),
-      );
-    });
+  completeDownload(feedUrl: string, episodeId: string, target: string): void {
+    const episode = this.findEpisode(feedUrl, episodeId);
+    const podcast = this.podcasts.find((p) => p.feedUrl === feedUrl);
+    if (episode && podcast) {
+      episode.localPath = target;
+      this.save(podcast);
+    }
+  }
+
+  episodeTitle(feedUrl: string, episodeId: string): string {
+    return this.findEpisode(feedUrl, episodeId)?.title ?? 'Épisode';
   }
 
   private isContent(path: string): boolean {
@@ -135,20 +134,6 @@ export class PodcastService {
     } catch {
       return null;
     }
-  }
-
-  // Native thread: NativeScript JS callbacks run on the main thread, and Http.getFile buffers the whole body in memory.
-  private streamToFile(url: string, target: string): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      org.nativescript.audiobookplayer.Downloader.download(
-        url,
-        target,
-        new org.nativescript.audiobookplayer.Downloader.Callback({
-          onDone: () => resolve(),
-          onError: (message: string) => reject(new Error(message)),
-        }),
-      );
-    });
   }
 
   removeDownload(feedUrl: string, episodeId: string): void {
@@ -237,7 +222,8 @@ export class PodcastService {
       }
     });
     parser.parse(xml);
-    return episodes.reverse();
+    const seen = new Set<string>();
+    return episodes.filter((e) => !seen.has(e.id) && !!seen.add(e.id)).reverse();
   }
 
   private deleteFile(path?: string): void {
