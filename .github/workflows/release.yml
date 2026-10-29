@@ -58,6 +58,12 @@ jobs:
       - run: npm ci
 
       - run: npm install -g nativescript@9
+
+      # Le doctor NativeScript exige l'émulateur et les composants SDK ciblés
+      - name: Install Android SDK components
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "emulator" "platforms;android-36" "build-tools;36.0.0"
       # Keystore auto-signé : fourni via le secret KEYSTORE_BASE64, sinon généré à la volée.
       # Pour que les mises à jour s'installent par-dessus, définir les secrets (même clé à chaque release).
       - name: Prepare keystore
