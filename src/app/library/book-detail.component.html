@@ -1,8 +1,13 @@
 <StackLayout class="screen-content">
   <Label text="‹  Bibliothèque" class="back-link" (tap)="state.closeBook()"></Label>
+  <Image [src]="book().artwork || (book().kind === 'podcast' ? 'res://cover_podcast' : 'res://cover_folder')" class="detail-cover" stretch="aspectFill"></Image>
   <Label [text]="book().title" class="detail-title" textWrap="true"></Label>
   <Label [text]="catalog.bookSummary(book())" class="book-meta detail-meta"></Label>
-  <Button [text]="catalog.resumeLabel(book())" class="primary-button detail-play" (tap)="catalog.play(book())"></Button>
+  <GridLayout columns="*, auto" class="detail-play-row">
+    <Button col="0" [text]="catalog.resumeLabel(book())" class="primary-button detail-play" (tap)="catalog.play(book())"></Button>
+    <Button *ngIf="book().kind !== 'podcast'" col="1" text="&#xe88e;" class="mi secondary-button info-button" (tap)="state.infoBook.set(book())"></Button>
+  </GridLayout>
+  <Button [text]="catalog.isRead(book()) ? 'Marquer non lu' : 'Marquer lu'" class="secondary-button detail-read" (tap)="toggleRead()"></Button>
 
   <StackLayout *ngIf="book().series || book().narrators?.length || book().genres?.length || book().publisher" class="detail-info">
     <Label *ngIf="book().series" [text]="'Saga : ' + book().series + (book().seriesPosition ? ' #' + book().seriesPosition : '')" class="book-meta" textWrap="true"></Label>
@@ -10,6 +15,8 @@
     <Label *ngIf="book().genres?.length" [text]="'Catégories : ' + book().genres!.join(', ')" class="book-meta" textWrap="true"></Label>
     <Label *ngIf="book().publisher" [text]="'Éditeur : ' + book().publisher" class="book-meta" textWrap="true"></Label>
   </StackLayout>
+
+  <Label *ngIf="book().summary" [text]="book().summary" class="info-summary" textWrap="true"></Label>
 
   <GridLayout *ngIf="book().kind === 'podcast'" columns="*, *, *" class="detail-actions">
     <Button

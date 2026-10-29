@@ -1,0 +1,50 @@
+<GridLayout *ngIf="filters.drawerOpen()" class="drawer-layer">
+  <GridLayout class="drawer-scrim" (tap)="filters.drawerOpen.set(false)"></GridLayout>
+  <GridLayout rows="auto, *, auto" class="picker" verticalAlignment="bottom" height="75%">
+    <StackLayout row="0" class="picker-header">
+      <Label text="Filtres" class="picker-heading"></Label>
+      <Label text="Les filtres se cumulent. Plusieurs choix dans un même type sont proposés en OU." class="book-meta" textWrap="true"></Label>
+    </StackLayout>
+    <ScrollView row="1">
+      <StackLayout>
+        <StackLayout *ngIf="filters.sagaOptions().length">
+          <Label text="Saga" class="section-title group-title"></Label>
+          <GridLayout *ngFor="let saga of filters.sagaOptions()" columns="auto, *" class="drawer-row" [class.current]="filters.sagas().has(saga)" (tap)="filters.toggle(filters.sagas, saga)">
+            <Label col="0" [text]="filters.sagas().has(saga) ? '\ue834' : '\ue835'" class="mi drawer-state"></Label>
+            <Label col="1" [text]="saga" class="drawer-name" textWrap="true" verticalAlignment="center"></Label>
+          </GridLayout>
+        </StackLayout>
+
+        <StackLayout *ngIf="filters.authorOptions().length">
+          <Label text="Auteur" class="section-title group-title"></Label>
+          <GridLayout *ngFor="let author of filters.authorOptions()" columns="auto, *" class="drawer-row" [class.current]="filters.authors().has(author)" (tap)="filters.toggle(filters.authors, author)">
+            <Label col="0" [text]="filters.authors().has(author) ? '\ue834' : '\ue835'" class="mi drawer-state"></Label>
+            <Label col="1" [text]="author" class="drawer-name" textWrap="true" verticalAlignment="center"></Label>
+          </GridLayout>
+        </StackLayout>
+
+        <StackLayout *ngIf="filters.genreOptions().length">
+          <Label text="Genre" class="section-title group-title"></Label>
+          <GridLayout *ngFor="let genre of filters.genreOptions()" columns="auto, *" class="drawer-row" [class.current]="filters.genres().has(genre)" (tap)="filters.toggle(filters.genres, genre)">
+            <Label col="0" [text]="filters.genres().has(genre) ? '\ue834' : '\ue835'" class="mi drawer-state"></Label>
+            <Label col="1" [text]="genre" class="drawer-name" textWrap="true" verticalAlignment="center"></Label>
+          </GridLayout>
+        </StackLayout>
+
+        <Label text="Lecture" class="section-title group-title"></Label>
+        <GridLayout columns="auto, *" class="drawer-row" [class.current]="filters.readStates().has('read')" (tap)="filters.toggle(filters.readStates, 'read')">
+          <Label col="0" [text]="filters.readStates().has('read') ? '\ue834' : '\ue835'" class="mi drawer-state"></Label>
+          <Label col="1" text="Lu" class="drawer-name" verticalAlignment="center"></Label>
+        </GridLayout>
+        <GridLayout columns="auto, *" class="drawer-row" [class.current]="filters.readStates().has('unread')" (tap)="filters.toggle(filters.readStates, 'unread')">
+          <Label col="0" [text]="filters.readStates().has('unread') ? '\ue834' : '\ue835'" class="mi drawer-state"></Label>
+          <Label col="1" text="Non lu" class="drawer-name" verticalAlignment="center"></Label>
+        </GridLayout>
+      </StackLayout>
+    </ScrollView>
+    <GridLayout row="2" columns="*, *" class="picker-actions">
+      <Button col="0" text="Réinitialiser" class="secondary-button" [isEnabled]="filters.activeCount() > 0" (tap)="filters.reset()"></Button>
+      <Button col="1" text="Fermer" class="primary-button" (tap)="filters.drawerOpen.set(false)"></Button>
+    </GridLayout>
+  </GridLayout>
+</GridLayout>

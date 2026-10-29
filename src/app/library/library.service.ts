@@ -15,7 +15,16 @@ export interface Chapter {
   startMs: number;
 }
 
-export interface Book {
+export interface OnlineDetails {
+  asin?: string;
+  subtitle?: string;
+  summary?: string;
+  releaseDate?: string;
+  runtimeMin?: number;
+  rating?: string;
+}
+
+export interface Book extends OnlineDetails {
   id: string;
   title: string;
   tracks: Track[];
@@ -33,7 +42,7 @@ export interface Book {
 }
 
 // Informations d'un livre issues des tags des fichiers puis, si besoin, des API en ligne.
-export interface BookTags {
+export interface BookTags extends OnlineDetails {
   sig: string;
   version?: number;
   title?: string;
@@ -48,10 +57,28 @@ export interface BookTags {
   publisher?: string;
   language?: string;
   chapters?: Chapter[];
+  durations?: number[];
 }
 
 // Incrémenter pour refaire la recherche en ligne des livres déjà traités.
-export const TAGS_VERSION = 2;
+export const TAGS_VERSION = 4;
+
+// Nom de chaque piste d'après les chapitres qui recouvrent sa plage (durées en ms, pistes dans l'ordre).
+export function chapterTrackNames(chapters: Chapter[], durations: number[]): (string | undefined)[] {
+  let from = 0;
+  return durations.map((duration) => {
+    const start = from;
+    const end = from + duration;
+    from = end;
+    if (!duration) {
+      return undefined;
+    }
+    const names = chapters
+      .filter((chapter, j) => chapter.startMs < end && (chapters[j + 1]?.startMs ?? Infinity) > start)
+      .map((chapter) => chapter.title);
+    return names.length ? names.join(' · ') : undefined;
+  });
+}
 
 const PICK_REQUEST = 4201;
 export const PODCASTS_DIR = 'Podcasts';
@@ -108,8 +135,9 @@ export class LibraryService {
   }
 
   applyTags(book: Book, tags: BookTags): Book {
+    const chapterNames = tags.chapters && tags.durations?.length === book.tracks.length ? chapterTrackNames(tags.chapters, tags.durations) : [];
     const tracks = book.tracks.map((track, i) => {
-      const name = tags.names?.[i];
+      const name = chapterNames[i] ?? tags.names?.[i];
       return name ? { ...track, name } : track;
     });
     return {
@@ -125,6 +153,12 @@ export class LibraryService {
       publisher: tags.publisher,
       language: tags.language,
       chapters: tags.chapters,
+      asin: tags.asin,
+      subtitle: tags.subtitle,
+      summary: tags.summary,
+      releaseDate: tags.releaseDate,
+      runtimeMin: tags.runtimeMin,
+      rating: tags.rating,
     };
   }
 
@@ -168,6 +202,29 @@ export class LibraryService {
       tags.names = names;
     }
     return tags;
+  }
+
+  // Durée de chaque piste en ms, pour situer les chapitres API dans les fichiers.
+  async readDurations(book: Book): Promise<number[]> {
+    const context = Utils.android.getApplicationContext();
+    const retriever = new android.media.MediaMetadataRetriever();
+    const durations: number[] = [];
+    try {
+      for (const track of book.tracks) {
+        let ms = 0;
+        try {
+          retriever.setDataSource(context, android.net.Uri.parse(track.uri));
+          ms = Number(retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION) ?? 0);
+        } catch {
+          // Fichier illisible : durée inconnue.
+        }
+        durations.push(ms);
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+    } finally {
+      retriever.release();
+    }
+    return durations;
   }
 
   coverPath(bookId: string, suffix = ''): string {

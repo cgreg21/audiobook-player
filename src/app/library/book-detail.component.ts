@@ -77,6 +77,12 @@ export class BookDetailComponent {
     this.queue.enqueue(id, track.id);
   }
 
+  toggleRead(): void {
+    const book = this.book();
+    this.player.setBookRead(book, !this.catalog.isRead(book));
+    this.catalog.rebuild(book.id);
+  }
+
   async downloadAll(): Promise<void> {
     const id = this.book().id;
     const pending = this.book().tracks.filter((t) => !t.downloaded && !this.queue.find(id, t.id));

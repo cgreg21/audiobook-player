@@ -11,6 +11,10 @@ const TABLET_CONTENT_WIDTH = 680;
 export class AppStateService {
   readonly activeTab = signal<Tab>('library');
   readonly selectedBook = signal<Book | null>(null);
+  // Vue « Voir tous » de la bibliothèque.
+  readonly libraryAll = signal(false);
+  // Livre affiché dans la fenêtre d'informations.
+  readonly infoBook = signal<Book | null>(null);
   private readonly history: { tab: Tab; book: Book | null }[] = [];
   // Gestionnaires de retour prioritaires (ex. tiroir du lecteur ouvert).
   readonly backHandlers: (() => boolean)[] = [];
@@ -36,6 +40,7 @@ export class AppStateService {
     this.pushHistory();
     this.activeTab.set(tab);
     this.selectedBook.set(null);
+    this.libraryAll.set(false);
   }
 
   openBook(book: Book): void {
@@ -51,6 +56,14 @@ export class AppStateService {
   // Retourne true si le retour a été géré dans l'appli, false pour laisser Android quitter.
   goBack(): boolean {
     if (this.backHandlers.some((handler) => handler())) {
+      return true;
+    }
+    if (this.libraryAll()) {
+      if (this.selectedBook()) {
+        this.closeBook();
+      } else {
+        this.libraryAll.set(false);
+      }
       return true;
     }
     const previous = this.history.pop();

@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Http } from '@nativescript/core';
+import { BookPickerService } from './book-picker.service';
 import type { Chapter } from './library.service';
 
 export interface BookInfo {
@@ -14,13 +15,21 @@ export interface BookInfo {
   publisher?: string;
   language?: string;
   chapters?: Chapter[];
+  subtitle?: string;
+  summary?: string;
+  releaseDate?: string;
+  runtimeMin?: number;
+  rating?: string;
 }
 
 const REGION = 'fr';
 
 @Injectable({ providedIn: 'root' })
 export class BookInfoService {
+  private readonly picker = inject(BookPickerService);
+
   // Complète les infos manquantes : Audnexus (ASIN trouvé via le catalogue Audible), puis Open Library, puis iTunes.
+  // Annulation du choix par l'utilisateur : rien n'est retenu pour ce livre.
   async lookup(title: string, author: string | undefined, need: { author: boolean; cover: boolean }): Promise<BookInfo> {
     const found: BookInfo = {};
     const sources = [
@@ -34,6 +43,9 @@ export class BookInfoService {
       }
       try {
         const info = await source();
+        if (info === 'cancelled') {
+          return {};
+        }
         if (info) {
           this.merge(found, info);
         }
@@ -56,6 +68,12 @@ export class BookInfoService {
     found.publisher ||= info.publisher;
     found.language ||= info.language;
     found.chapters ||= info.chapters;
+    found.asin ||= info.asin;
+    found.subtitle ||= info.subtitle;
+    found.summary ||= info.summary;
+    found.releaseDate ||= info.releaseDate;
+    found.runtimeMin ||= info.runtimeMin;
+    found.rating ||= info.rating;
   }
 
   async downloadCover(url: string, path: string): Promise<boolean> {
@@ -67,12 +85,29 @@ export class BookInfoService {
     }
   }
 
-  private async audnexus(title: string, author?: string): Promise<BookInfo | null> {
+  private async audnexus(title: string, author?: string): Promise<BookInfo | 'cancelled' | null> {
     const query = `title=${encodeURIComponent(title)}${author ? `&author=${encodeURIComponent(author)}` : ''}`;
     const search = await this.getJson(
       `https://api.audible.${REGION}/1.0/catalog/products?num_results=5&products_sort_by=Relevance&${query}`,
     );
-    const product = (search?.products ?? []).find((p: any) => this.similar(p.title, title));
+    const matches: any[] = (search?.products ?? []).filter((p: any) => p.asin && this.similar(p.title, title));
+    const unique = matches.filter((p, i) => matches.findIndex((q) => q.asin === p.asin) === i);
+    let product = unique[0];
+    if (unique.length > 1) {
+      const chosen = await this.picker.choose(
+        title,
+        author,
+        unique.map((p) => ({
+          asin: p.asin,
+          title: p.title,
+          author: p.authors?.map((a: any) => a.name).join(', ') || undefined,
+        })),
+      );
+      if (chosen === null) {
+        return 'cancelled';
+      }
+      product = unique.find((p) => p.asin === chosen);
+    }
     if (!product?.asin) {
       return null;
     }
@@ -93,7 +128,25 @@ export class BookInfoService {
       publisher: book.publisherName,
       language: book.language,
       chapters: await this.audnexusChapters(asin),
+      subtitle: book.subtitle || undefined,
+      summary: this.plainText(book.summary),
+      releaseDate: book.releaseDate?.slice(0, 10) || undefined,
+      runtimeMin: typeof book.runtimeLengthMin === 'number' ? book.runtimeLengthMin : undefined,
+      rating: book.rating ? String(book.rating) : undefined,
     };
+  }
+
+  // Le résumé Audnexus est du HTML : on ne garde que le texte.
+  private plainText(html: string | undefined): string | undefined {
+    const text = (html ?? '')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .trim();
+    return text || undefined;
   }
 
   private async audnexusChapters(asin: string): Promise<Chapter[] | undefined> {

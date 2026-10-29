@@ -1,4 +1,7 @@
 <StackLayout class="screen-content">
+  <app-library-all *ngIf="state.libraryAll(); else home"></app-library-all>
+
+  <ng-template #home>
   <app-continue-card></app-continue-card>
 
   <StackLayout *ngIf="catalog.libraryProgress() as progress" class="library-progress">
@@ -12,20 +15,15 @@
     <Label [text]="progress.label" class="book-meta library-progress-label" textWrap="false"></Label>
   </StackLayout>
 
-  <GridLayout columns="*, auto, auto" class="section-heading">
+  <GridLayout columns="*, auto" class="section-heading">
     <StackLayout col="0" verticalAlignment="center">
-      <Label text="Ma collection" class="section-title"></Label>
+      <Label text="Ajoutés récemment" class="section-title"></Label>
     </StackLayout>
-    <Button col="1" [text]="'Groupe : ' + groupingLabel() + '  \u25BE'" class="option-chip filter-chip active" verticalAlignment="center" (tap)="pickGrouping()"></Button>
-    <Button col="2" [text]="filterLabel() + '  \u25BE'" class="option-chip filter-chip active" verticalAlignment="center" (tap)="pickFilter()"></Button>
+    <Button col="1" text="Voir tous" class="option-chip filter-chip active" verticalAlignment="center" (tap)="state.libraryAll.set(true)"></Button>
   </GridLayout>
 
   <StackLayout *ngIf="catalog.books().length">
-    <StackLayout *ngFor="let group of groups()">
-      <Label *ngIf="group.label" [text]="group.label + ' (' + group.books.length + ')'" class="section-title group-title"></Label>
-      <app-book-row *ngFor="let book of group.books" [book]="book" (opened)="state.selectedBook.set(book)"></app-book-row>
-    </StackLayout>
-    <Label *ngIf="!visibleBooks().length" text="Aucun élément pour ce filtre." class="empty-description"></Label>
+    <app-book-row *ngFor="let book of recent()" [book]="book" (opened)="state.selectedBook.set(book)"></app-book-row>
   </StackLayout>
 
   <StackLayout *ngIf="!catalog.books().length" class="empty-card">
@@ -41,4 +39,5 @@
     <Button text="＋  Ajouter un dossier" class="primary-button" (tap)="catalog.importFolder()"></Button>
     <Label text="Fichiers MP3 stockés sur votre appareil" class="privacy-note"></Label>
   </StackLayout>
+  </ng-template>
 </StackLayout>

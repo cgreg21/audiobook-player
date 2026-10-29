@@ -237,6 +237,17 @@ export class PlayerService {
     this.lastObserved = { bookId: book.id, index, ratio };
   }
 
+  // Lu : toutes les pistes marquées ; non lu : lecture effacée, la position de reprise est conservée.
+  setBookRead(book: Book, read: boolean): void {
+    if (read) {
+      book.tracks.forEach((_, index) => this.markRead(book.id, index));
+      return;
+    }
+    this.db.clearChaptersRead(book.id);
+    this.readCache.delete(book.id);
+    this.readTick.update((n) => n + 1);
+  }
+
   private markRead(bookId: string, index: number): void {
     const set = this.readSet(bookId);
     if (!set.has(index)) {

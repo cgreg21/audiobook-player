@@ -1,0 +1,24 @@
+<GridLayout *ngIf="picker.request() as req" class="drawer-layer">
+  <GridLayout class="drawer-scrim"></GridLayout>
+  <GridLayout rows="auto, *, auto" class="picker" verticalAlignment="center" height="80%">
+    <StackLayout row="0" class="picker-header">
+      <Label text="Plusieurs résultats : quel livre est le bon ?" class="picker-heading" textWrap="true"></Label>
+      <Label [text]="'Titre : ' + req.title" class="book-meta" textWrap="true"></Label>
+      <Label [text]="'Auteur : ' + (req.author || 'inconnu')" class="book-meta" textWrap="true"></Label>
+    </StackLayout>
+    <ScrollView row="1">
+      <StackLayout>
+        <GridLayout *ngFor="let c of req.candidates" columns="*" class="drawer-row" [class.current]="c.asin === selected()" (tap)="select(c.asin)">
+          <StackLayout col="0">
+            <Label [text]="c.title" class="drawer-name" textWrap="true"></Label>
+            <Label [text]="c.author || 'Auteur inconnu'" class="book-meta" textWrap="true"></Label>
+          </StackLayout>
+        </GridLayout>
+      </StackLayout>
+    </ScrollView>
+    <GridLayout row="2" columns="*, *" class="picker-actions">
+      <Button col="0" text="Annuler" class="secondary-button" (tap)="cancel()"></Button>
+      <Button col="1" text="Valider" class="primary-button" [isEnabled]="!!selected()" (tap)="validate()"></Button>
+    </GridLayout>
+  </GridLayout>
+</GridLayout>

@@ -665,6 +665,40 @@
   margin: 0 0 16;
 }
 
+.detail-cover {
+  border-radius: 16;
+  height: 180;
+  horizontal-align: center;
+  margin: 0 0 16;
+  width: 180;
+}
+
+.detail-play-row {
+  margin: 0;
+}
+
+.detail-read {
+  margin: 0 0 16;
+}
+
+.info-button {
+  height: 48;
+  margin: 0 0 16 8;
+  width: 48;
+}
+
+.info-cover {
+  border-radius: 12;
+  height: 96;
+  width: 96;
+}
+
+.info-summary {
+  color: var(--text);
+  font-size: 13;
+  margin-top: 12;
+}
+
 .privacy-note {
   color: var(--muted);
   font-size: 10;
@@ -906,3 +940,7 @@
 .drawer-state { color: var(--accent); font-size: 22; width: 36; }
 .drawer-name { color: var(--text); font-size: 14; }
 .drawer-status { color: var(--muted); font-size: 11; }
+.picker { background-color: var(--surface); border-radius: 20; margin: 24; padding: 16; }
+.picker-header { padding-bottom: 8; }
+.picker-heading { color: var(--text); font-size: 15; font-weight: bold; padding-bottom: 6; }
+.picker-actions { padding-top: 8; }

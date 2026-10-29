@@ -84,6 +84,9 @@ export class CatalogService {
   private async collectInfo(book: Book): Promise<BookTags> {
     const cached = this.library.cachedTags(book);
     const tags = cached ?? (await this.library.readTags(book));
+    if (!tags.durations) {
+      tags.durations = await this.library.readDurations(book);
+    }
     if (this.state.online()) {
       const info = await this.bookInfo.lookup(tags.title || book.title, tags.author, { author: !tags.author, cover: true });
       tags.title = info.title || tags.title;
@@ -95,6 +98,12 @@ export class CatalogService {
       tags.publisher = info.publisher ?? tags.publisher;
       tags.language = info.language ?? tags.language;
       tags.chapters = info.chapters ?? tags.chapters;
+      tags.asin = info.asin ?? tags.asin;
+      tags.subtitle = info.subtitle ?? tags.subtitle;
+      tags.summary = info.summary ?? tags.summary;
+      tags.releaseDate = info.releaseDate ?? tags.releaseDate;
+      tags.runtimeMin = info.runtimeMin ?? tags.runtimeMin;
+      tags.rating = info.rating ?? tags.rating;
       if (info.chapters && info.chapters.length === book.tracks.length) {
         tags.names = info.chapters.map((c) => c.title);
       }
@@ -236,6 +245,11 @@ export class CatalogService {
     return null;
   }
 
+  // Lu = toutes les pistes ou chapitres écoutés.
+  isRead(book: Book): boolean {
+    return this.player.bookFraction(book) >= 1;
+  }
+
   // Un podcast avec de nouveaux épisodes garde l'icône en plus de son statut ; un livre seulement tant qu'il n'est pas commencé.
   isNew(book: Book): boolean {
     if (book.kind === 'podcast' && this.newEpisodesAt(book) > 0) {
@@ -250,7 +264,7 @@ export class CatalogService {
     return Date.now() - at < NEW_DAYS * 86_400_000 ? at : 0;
   }
 
-  private addedAt(book: Book): number {
+  addedAt(book: Book): number {
     if (book.addedAt) {
       return book.addedAt;
     }

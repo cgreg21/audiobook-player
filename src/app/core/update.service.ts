@@ -35,7 +35,10 @@ export class UpdateService {
         method: 'GET',
         headers: { Accept: 'application/vnd.github+json' },
       });
-      const releases = response.content?.toJSON() as any[];
+      if (response.statusCode !== 200 || !response.content) {
+        throw new Error(`GitHub a répondu ${response.statusCode}`);
+      }
+      const releases = response.content.toJSON() as any[];
       const release = releases.find((r) => !r.draft && r.assets?.some((a: any) => /\.apk$/.test(a.name)));
       if (!release) {
         this.status.set('uptodate');
@@ -72,7 +75,11 @@ export class UpdateService {
       const dir = path.join(String(context.getCacheDir().getAbsolutePath()), 'updates');
       Folder.fromPath(dir);
       const target = path.join(dir, 'update.apk');
-      await Http.getFile(info.url, target);
+      const response = await Http.request({ url: info.url, method: 'GET' });
+      if (response.statusCode !== 200 || !response.content) {
+        throw new Error(`téléchargement refusé (${response.statusCode})`);
+      }
+      response.content.toFile(target);
       this.launchInstaller(target);
       this.status.set('available');
     } catch (error) {

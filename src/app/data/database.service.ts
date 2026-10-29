@@ -120,6 +120,10 @@ export class DatabaseService {
     this.exec('INSERT OR IGNORE INTO chapters_read (book_id, track_index) VALUES (?, ?)', [bookId, trackIndex]);
   }
 
+  clearChaptersRead(bookId: string): void {
+    this.exec('DELETE FROM chapters_read WHERE book_id = ?', [bookId]);
+  }
+
   readChapters(bookId: string): number[] {
     return this.query('SELECT track_index FROM chapters_read WHERE book_id = ?', [bookId], (c) => c.getInt(0));
   }
