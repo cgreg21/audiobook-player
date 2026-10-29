@@ -38,6 +38,16 @@ jobs:
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "TAG=$TAG" >> "$GITHUB_ENV"
           echo "PRERELEASE=$PRE" >> "$GITHUB_ENV"
+          PREV=$(git tag -l 'v*' | sort -V | tail -n1)
+          RANGE=${PREV:+$PREV..}HEAD
+          {
+            echo "## $TAG"
+            echo
+            git log "$RANGE" --no-merges --pretty='- %s (%h)'
+            echo
+            [ -n "$PREV" ] && echo "**Changements depuis $PREV** : https://github.com/${{ github.repository }}/compare/$PREV...$TAG"
+          } > "$RUNNER_TEMP/changelog.md"
+          cat "$RUNNER_TEMP/changelog.md"
           echo "Version: $TAG (précédente: $LAST)"
 
       - uses: actions/setup-node@v4
@@ -102,5 +112,5 @@ jobs:
           target_commitish: ${{ github.sha }}
           name: ${{ env.TAG }}
           prerelease: ${{ env.PRERELEASE == 'true' }}
-          generate_release_notes: true
+          body_path: ${{ runner.temp }}/changelog.md
           files: dist/audiobook-player-${{ env.TAG }}.apk
