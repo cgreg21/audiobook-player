@@ -1,18 +1,16 @@
 <GridLayout
   rows="*, auto"
   class="app-shell"
+  [ngClass]="'pal-' + settings.palette()"
   [class.theme-light]="settings.isLight()"
-  [class.accent-coral]="settings.accent() === 'coral'"
-  [class.accent-emerald]="settings.accent() === 'emerald'"
-  [class.accent-blue]="settings.accent() === 'blue'"
 >
   <GridLayout row="0" rows="auto, *">
     <StackLayout row="0" *ngIf="!(state.landscape() && state.activeTab() === 'player')" [width]="state.contentWidth()" [horizontalAlignment]="state.contentAlign()">
       <app-top-bar></app-top-bar>
     </StackLayout>
 
-    <ScrollView *ngIf="state.activeTab() !== 'player'" row="1" class="screen-scroll" scrollBarIndicatorVisible="false">
-      <StackLayout [width]="state.contentWidth()" [horizontalAlignment]="state.contentAlign()">
+    <ScrollView *ngIf="state.activeTab() !== 'player'" row="1" class="screen-scroll" scrollBarIndicatorVisible="false" (touch)="onTouch($any($event))">
+      <StackLayout [width]="state.contentWidth()" [horizontalAlignment]="state.contentAlign()" [marginTop]="pull() ? pull() : 0">
         <StackLayout appEnter *ngIf="state.activeTab() === 'library' && !state.selectedBook()">
           <app-library-tab></app-library-tab>
         </StackLayout>
@@ -27,6 +25,17 @@
         </StackLayout>
       </StackLayout>
     </ScrollView>
+    <ActivityIndicator
+      *ngIf="showLoader()"
+      row="1"
+      busy="true"
+      width="36"
+      height="36"
+      horizontalAlignment="center"
+      verticalAlignment="top"
+      margin="10 0 0 0"
+      class="search-spinner"
+    ></ActivityIndicator>
 
     <GridLayout appEnter *ngIf="state.activeTab() === 'player'" row="1" class="screen-scroll">
       <app-player-tab></app-player-tab>

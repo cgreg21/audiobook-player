@@ -37,16 +37,39 @@
   --err-border: #cb715e;
 }
 
-.app-shell.accent-coral {
-  --accent: #e0694b;
+.app-shell.pal-ocean { --accent: #2f7de1; --accent-text: #9cc4ff; --bg: #0a1220; --surface: #111c30; --surface2: #172338; --chip: #223a5e; --nav-bg: #0e1829; --border: #1d2b45; }
+.app-shell.pal-forest { --accent: #1f9d6b; --accent-text: #8fe3b8; --bg: #08140f; --surface: #0f1f18; --surface2: #15281f; --chip: #1f4232; --nav-bg: #0c1a13; --border: #1a3126; }
+.app-shell.pal-sunset { --accent: #e0694b; --accent-text: #ffb199; --bg: #1a0e0b; --surface: #261612; --surface2: #331d17; --chip: #52291f; --nav-bg: #20120e; --border: #3a211a; }
+.app-shell.pal-rose { --accent: #e0527f; --accent-text: #ffa5c4; --bg: #190c13; --surface: #25141d; --surface2: #2e1625; --chip: #4a2338; --nav-bg: #1f0f18; --border: #3a1f2d; }
+.app-shell.pal-amber { --accent: #d98a0b; --accent-text: #ffcf80; --bg: #17110a; --surface: #231a0f; --surface2: #2e2312; --chip: #4a3a1c; --nav-bg: #1d150c; --border: #3a2c18; }
+.app-shell.pal-teal { --accent: #12a39a; --accent-text: #7fe0d4; --bg: #081615; --surface: #0f2423; --surface2: #123030; --chip: #1c4a4a; --nav-bg: #0b1d1c; --border: #1a3a38; }
+.app-shell.pal-slate { --accent: #64748b; --accent-text: #b6c2d1; --bg: #0e1117; --surface: #161b24; --surface2: #1c2330; --chip: #2c3646; --nav-bg: #121720; --border: #252d3a; }
+
+.app-shell.theme-light.pal-ocean { --accent-text: #1f5fb8; --bg: #f1f6fc; --surface: #ffffff; --surface2: #e3edfa; --chip: #cfe0f5; --nav-bg: #ffffff; --border: #d6e3f3; }
+.app-shell.theme-light.pal-forest { --accent-text: #1d7a4a; --bg: #f1f9f4; --surface: #ffffff; --surface2: #e0f2e8; --chip: #c8e8d6; --nav-bg: #ffffff; --border: #d3eadb; }
+.app-shell.theme-light.pal-sunset { --accent-text: #b8452b; --bg: #fcf3ef; --surface: #ffffff; --surface2: #fae4dc; --chip: #f5cfc2; --nav-bg: #ffffff; --border: #f0d9d0; }
+.app-shell.theme-light.pal-rose { --accent-text: #b8305f; --bg: #fcf1f5; --surface: #ffffff; --surface2: #fbe6ee; --chip: #f5cfdd; --nav-bg: #ffffff; --border: #f0d6e0; }
+.app-shell.theme-light.pal-amber { --accent-text: #a86a00; --bg: #fcf7ee; --surface: #ffffff; --surface2: #fbf0dc; --chip: #f5e1b9; --nav-bg: #ffffff; --border: #eee1c8; }
+.app-shell.theme-light.pal-teal { --accent-text: #12776d; --bg: #eff9f8; --surface: #ffffff; --surface2: #dff3f0; --chip: #c5e8e3; --nav-bg: #ffffff; --border: #d0e9e5; }
+.app-shell.theme-light.pal-slate { --accent-text: #475569; --bg: #f3f5f8; --surface: #ffffff; --surface2: #e8ecf2; --chip: #d5dce6; --nav-bg: #ffffff; --border: #dbe1ea; }
+
+.swatch {
+  border-color: transparent;
+  border-radius: 22;
+  border-width: 3;
+  height: 44;
+  margin: 4 10 4 0;
+  width: 44;
 }
 
-.app-shell.accent-emerald {
-  --accent: #1f9d6b;
+.swatch-core {
+  border-radius: 9;
+  height: 18;
+  width: 18;
 }
 
-.app-shell.accent-blue {
-  --accent: #2f7de1;
+.swatch.active {
+  border-color: var(--text);
 }
 
 .topbar {
@@ -424,14 +447,24 @@
   color: var(--muted);
 }
 
+.nav-new-dot {
+  background-color: var(--ok-text);
+  border-color: var(--nav-bg);
+  border-radius: 8;
+  border-width: 2;
+  height: 16;
+  margin: 0;
+  width: 16;
+}
+
 .status-new-dot {
   background-color: var(--ok-text);
   border-color: var(--surface);
-  border-radius: 11;
-  border-width: 3;
-  height: 22;
+  border-radius: 8;
+  border-width: 2;
+  height: 16;
   margin: 4 0 0 4;
-  width: 22;
+  width: 16;
 }
 
 .library-progress {

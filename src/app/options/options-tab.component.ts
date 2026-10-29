@@ -6,8 +6,9 @@ import { UpdateService } from '../core/update.service';
 import { DatabaseService } from '../data/database.service';
 import { CatalogService } from '../library/catalog.service';
 import { LibraryService } from '../library/library.service';
+import { PressDirective } from '../core/motion.directives';
 import { PodcastService } from '../library/podcast.service';
-import { Accent, SettingsService, StorageLocation, ThemeMode } from '../settings/settings.service';
+import { SettingsService, StorageLocation, ThemeMode, PALETTES } from '../settings/settings.service';
 
 interface FolderInfo {
   uri: string;
@@ -23,7 +24,7 @@ interface UsageInfo {
 @Component({
   selector: 'app-options-tab',
   templateUrl: './options-tab.component.html',
-  imports: [NativeScriptCommonModule],
+  imports: [NativeScriptCommonModule, PressDirective],
   schemas: [NO_ERRORS_SCHEMA],
 })
 export class OptionsTabComponent implements OnInit {
@@ -41,12 +42,7 @@ export class OptionsTabComponent implements OnInit {
     { value: 'light', label: 'Clair' },
     { value: 'system', label: 'Système' },
   ];
-  readonly accentChoices: { value: Accent; label: string }[] = [
-    { value: 'violet', label: 'Violet' },
-    { value: 'coral', label: 'Corail' },
-    { value: 'emerald', label: 'Émeraude' },
-    { value: 'blue', label: 'Bleu' },
-  ];
+  readonly palettes = PALETTES;
 
   readonly usage = signal<UsageInfo[]>([]);
   readonly usageTotal = signal(0);

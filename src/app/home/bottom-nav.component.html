@@ -7,6 +7,9 @@
     [class.active]="state.activeTab() === item.tab"
     (tap)="state.setTab(item.tab)"
   >
-    <Label [text]="item.icon" class="mi nav-icon"></Label>
+    <GridLayout rows="auto" horizontalAlignment="center">
+      <Label [text]="item.icon" class="mi nav-icon" margin="6 6 0 6"></Label>
+      <StackLayout *ngIf="item.tab === 'library' && hasNew()" class="nav-new-dot" horizontalAlignment="right" verticalAlignment="top"></StackLayout>
+    </GridLayout>
   </StackLayout>
 </GridLayout>

@@ -6,7 +6,26 @@ declare const android: any;
 declare const java: any;
 
 export type ThemeMode = 'system' | 'dark' | 'light';
-export type Accent = 'violet' | 'coral' | 'emerald' | 'blue';
+export type Palette = 'violet' | 'ocean' | 'forest' | 'sunset' | 'rose' | 'amber' | 'teal' | 'slate';
+
+export interface PaletteInfo {
+  value: Palette;
+  label: string;
+  accent: string;
+  dark: { bg: string; nav: string };
+  light: { bg: string; nav: string };
+}
+
+export const PALETTES: PaletteInfo[] = [
+  { value: 'violet', label: 'Violet', accent: '#8052df', dark: { bg: '#100a1d', nav: '#170f25' }, light: { bg: '#f6f2fb', nav: '#ffffff' } },
+  { value: 'ocean', label: 'Océan', accent: '#2f7de1', dark: { bg: '#0a1220', nav: '#0e1829' }, light: { bg: '#f1f6fc', nav: '#ffffff' } },
+  { value: 'forest', label: 'Forêt', accent: '#1f9d6b', dark: { bg: '#08140f', nav: '#0c1a13' }, light: { bg: '#f1f9f4', nav: '#ffffff' } },
+  { value: 'teal', label: 'Lagon', accent: '#12a39a', dark: { bg: '#081615', nav: '#0b1d1c' }, light: { bg: '#eff9f8', nav: '#ffffff' } },
+  { value: 'amber', label: 'Ambre', accent: '#d98a0b', dark: { bg: '#17110a', nav: '#1d150c' }, light: { bg: '#fcf7ee', nav: '#ffffff' } },
+  { value: 'sunset', label: 'Couchant', accent: '#e0694b', dark: { bg: '#1a0e0b', nav: '#20120e' }, light: { bg: '#fcf3ef', nav: '#ffffff' } },
+  { value: 'rose', label: 'Rose', accent: '#e0527f', dark: { bg: '#190c13', nav: '#1f0f18' }, light: { bg: '#fcf1f5', nav: '#ffffff' } },
+  { value: 'slate', label: 'Ardoise', accent: '#64748b', dark: { bg: '#0e1117', nav: '#121720' }, light: { bg: '#f3f5f8', nav: '#ffffff' } },
+];
 export type StorageLocation = 'internal' | 'external';
 
 @Injectable({ providedIn: 'root' })
@@ -14,7 +33,7 @@ export class SettingsService {
   private readonly db = inject(DatabaseService);
 
   readonly themeMode = signal<ThemeMode>(this.db.getSetting('theme.mode', 'dark') as ThemeMode);
-  readonly accent = signal<Accent>(this.db.getSetting('theme.accent', 'violet') as Accent);
+  readonly palette = signal<Palette>(this.db.getSetting('theme.palette', 'violet') as Palette);
   readonly storage = signal<StorageLocation>(this.db.getSetting('storage.location', 'internal') as StorageLocation);
 
   readonly feedIntervals: { value: number; label: string }[] = [
@@ -52,9 +71,9 @@ export class SettingsService {
     this.db.setSetting('theme.mode', mode);
   }
 
-  setAccent(accent: Accent): void {
-    this.accent.set(accent);
-    this.db.setSetting('theme.accent', accent);
+  setPalette(palette: Palette): void {
+    this.palette.set(palette);
+    this.db.setSetting('theme.palette', palette);
   }
 
   setStorage(location: StorageLocation): void {

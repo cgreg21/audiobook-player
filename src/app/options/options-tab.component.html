@@ -12,17 +12,22 @@
         (tap)="settings.setThemeMode(choice.value)"
       ></Button>
     </GridLayout>
-    <Label text="Couleur d’accent" class="option-label"></Label>
-    <GridLayout columns="*, *, *, *" class="option-chips">
-      <Button
-        *ngFor="let choice of accentChoices; let i = index"
-        [col]="i"
-        [text]="choice.label"
-        class="option-chip"
-        [class.active]="settings.accent() === choice.value"
-        (tap)="settings.setAccent(choice.value)"
-      ></Button>
-    </GridLayout>
+    <Label text="Palette de couleurs" class="option-label"></Label>
+    <WrapLayout margin="0 0 8 0">
+      <GridLayout
+        appPress
+        *ngFor="let p of palettes"
+        class="swatch"
+        [style.backgroundColor]="p.accent"
+        [class.active]="settings.palette() === p.value"
+        (tap)="settings.setPalette(p.value)"
+      >
+        <StackLayout
+          class="swatch-core"
+          [style.backgroundColor]="settings.isLight() ? p.light.bg : p.dark.bg"
+        ></StackLayout>
+      </GridLayout>
+    </WrapLayout>
   </StackLayout>
 
   <StackLayout class="option-card">
