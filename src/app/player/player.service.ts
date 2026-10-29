@@ -7,13 +7,18 @@ declare const org: any;
 declare const androidx: any;
 
 const POLL_MS = 1000;
-const SAVE_EVERY_TICKS = 5;
+const SAVE_EVERY_TICKS = 2;
 const FINISHED_RATIO = 0.95;
 
 @Injectable({ providedIn: 'root' })
 export class PlayerService {
   private readonly db = inject(DatabaseService);
 
+  constructor() {
+    // The app can be killed right after backgrounding: persist the position beforehand.
+    Application.on(Application.suspendEvent, () => this.saveProgress());
+    Application.on(Application.exitEvent, () => this.saveProgress());
+  }
   readonly book = signal<Book | null>(null);
   readonly trackIndex = signal(0);
   readonly playing = signal(false);
@@ -136,7 +141,11 @@ export class PlayerService {
     if (!this.book() || !this.bridge.isConnected()) {
       return;
     }
+    const wasPlaying = this.playing();
     this.playing.set(this.bridge.isPlaying());
+    if (wasPlaying && !this.playing()) {
+      this.saveProgress();
+    }
     this.trackIndex.set(this.bridge.trackIndex());
     this.positionMs.set(Number(this.bridge.position()));
     this.durationMs.set(Number(this.bridge.duration()));
@@ -149,7 +158,7 @@ export class PlayerService {
 
   private saveProgress(): void {
     const book = this.book();
-    if (book && this.bridge.isConnected()) {
+    if (book && this.bridge.isConnected() && Number(this.bridge.duration()) > 0) {
       const progress: Progress = {
         index: this.bridge.trackIndex(),
         positionMs: Number(this.bridge.position()),

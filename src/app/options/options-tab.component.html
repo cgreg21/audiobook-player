@@ -90,4 +90,31 @@
     </GridLayout>
     <Button [text]="folders().length ? 'Changer de dossier' : '＋  Ajouter un dossier'" class="primary-button" (tap)="importFolder()"></Button>
   </StackLayout>
+
+  <StackLayout class="option-card">
+    <Label text="Mise à jour" class="option-title"></Label>
+    <Label
+      *ngIf="updates.status() === 'available' || updates.status() === 'downloading'"
+      [text]="'Version ' + updates.latest()?.tag + ' disponible'"
+      class="book-meta"
+    ></Label>
+    <Label *ngIf="updates.status() === 'uptodate'" text="L’application est à jour." class="book-meta"></Label>
+    <Label *ngIf="updates.message()" [text]="updates.message()" class="book-meta" textWrap="true"></Label>
+    <Button
+      *ngIf="updates.status() !== 'available' && updates.status() !== 'downloading'"
+      [text]="updates.status() === 'checking' ? 'Vérification…' : 'Rechercher une mise à jour'"
+      class="primary-button"
+      [isEnabled]="updates.status() !== 'checking'"
+      (tap)="updates.check()"
+    ></Button>
+    <Button
+      *ngIf="updates.status() === 'available' || updates.status() === 'downloading'"
+      [text]="updates.status() === 'downloading' ? 'Téléchargement…' : 'Télécharger et installer'"
+      class="primary-button"
+      [isEnabled]="updates.status() === 'available'"
+      (tap)="updates.install()"
+    ></Button>
+  </StackLayout>
+
+  <Label [text]="'Version ' + version" class="book-meta" horizontalAlignment="center" margin="8 0 16 0"></Label>
 </StackLayout>

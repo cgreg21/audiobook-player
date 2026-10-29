@@ -1,10 +1,17 @@
-<GridLayout columns="*, auto" class="topbar">
+<GridLayout columns="*, auto, auto" class="topbar">
   <StackLayout col="0" class="topbar-copy" verticalAlignment="center">
     <Label [text]="title()" class="screen-title"></Label>
   </StackLayout>
   <Label
-    appPress
     col="1"
+    text="●"
+    class="net-badge"
+    [class.offline]="!state.online()"
+    verticalAlignment="center"
+  ></Label>
+  <Label
+    appPress
+    col="2"
     text="⚙"
     class="brand-mark"
     [class.active]="state.activeTab() === 'options'"

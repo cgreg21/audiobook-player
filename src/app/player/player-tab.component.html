@@ -1,6 +1,17 @@
 <ng-template #art let-book>
-  <GridLayout class="player-art">
-    <Image [src]="book?.artwork || (book?.kind === 'podcast' ? 'res://cover_podcast' : 'res://cover_folder')" class="player-image" stretch="aspectFill"></Image>
+  <GridLayout rows="auto" class="player-art turntable">
+    <GridLayout [appSpin]="player.playing()" [spinPeriod]="spinPeriod()" class="vinyl">
+      <GridLayout class="groove groove-1"></GridLayout>
+      <GridLayout class="groove groove-2"></GridLayout>
+      <GridLayout class="groove groove-3"></GridLayout>
+      <Image [src]="book?.artwork || (book?.kind === 'podcast' ? 'res://cover_podcast' : 'res://cover_folder')" class="vinyl-label" stretch="aspectFill"></Image>
+      <GridLayout class="vinyl-hole"></GridLayout>
+    </GridLayout>
+    <GridLayout [appRotateTo]="armAngle()" originX="0.5" originY="0" class="tonearm">
+      <StackLayout class="tonearm-rod"></StackLayout>
+      <StackLayout class="tonearm-head"></StackLayout>
+    </GridLayout>
+    <GridLayout class="tonearm-pivot"></GridLayout>
   </GridLayout>
 </ng-template>
 
@@ -16,17 +27,17 @@
     (valueChange)="onSeek($any($event).value)"
     class="player-slider"
   ></Slider>
-  <GridLayout columns="*, *" class="player-times">
+  <GridLayout rows="auto" columns="*, *" class="player-times">
     <Label col="0" [text]="formatTime(player.positionMs())" class="player-time"></Label>
     <Label col="1" [text]="formatTime(player.durationMs())" class="player-time end"></Label>
   </GridLayout>
 
-  <GridLayout columns="*, *, auto, *, *" class="player-controls">
-    <Label col="0" text="⏮" class="control" (tap)="player.skipTo(player.trackIndex() - 1)"></Label>
-    <Label col="1" text="↺ 15" class="control" (tap)="player.seekBy(-15000)"></Label>
+  <GridLayout rows="auto" columns="*, *, auto, *, *" class="player-controls">
+    <Label col="0" text="«" class="control control-skip" (tap)="player.skipTo(player.trackIndex() - 1)"></Label>
+    <Label col="1" text="↺" class="control control-seek" (tap)="player.seekBy(-15000)"></Label>
     <Label col="2" [text]="player.playing() ? '❚❚' : '▶'" class="control-main" (tap)="player.toggle()"></Label>
-    <Label col="3" text="30 ↻" class="control" (tap)="player.seekBy(30000)"></Label>
-    <Label col="4" text="⏭" class="control" (tap)="player.skipTo(player.trackIndex() + 1)"></Label>
+    <Label col="3" text="↻" class="control control-seek" (tap)="player.seekBy(30000)"></Label>
+    <Label col="4" text="»" class="control control-skip" (tap)="player.skipTo(player.trackIndex() + 1)"></Label>
   </GridLayout>
 </ng-template>
 
@@ -42,7 +53,6 @@
 
 <ng-container *ngIf="player.book() as book; else idle">
   <StackLayout *ngIf="!state.landscape(); else wide" class="player-content">
-    <Label text="EN LECTURE" class="eyebrow player-eyebrow"></Label>
     <ng-container *ngTemplateOutlet="art; context: { $implicit: book }"></ng-container>
     <ng-container *ngTemplateOutlet="info; context: { $implicit: book }"></ng-container>
     <ng-container *ngTemplateOutlet="transport"></ng-container>

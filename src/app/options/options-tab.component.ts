@@ -2,6 +2,7 @@ import { Component, inject, NO_ERRORS_SCHEMA, OnInit, signal } from '@angular/co
 import { NativeScriptCommonModule } from '@nativescript/angular';
 import { Dialogs } from '@nativescript/core';
 import { AppStateService } from '../core/app-state.service';
+import { UpdateService } from '../core/update.service';
 import { DatabaseService } from '../data/database.service';
 import { CatalogService } from '../library/catalog.service';
 import { LibraryService } from '../library/library.service';
@@ -27,6 +28,8 @@ interface UsageInfo {
 })
 export class OptionsTabComponent implements OnInit {
   readonly settings = inject(SettingsService);
+  readonly updates = inject(UpdateService);
+  readonly version = this.updates.currentVersion();
   private readonly catalog = inject(CatalogService);
   private readonly library = inject(LibraryService);
   private readonly podcasts = inject(PodcastService);

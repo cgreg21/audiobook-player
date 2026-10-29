@@ -7,12 +7,12 @@
   [class.accent-blue]="settings.accent() === 'blue'"
 >
   <GridLayout row="0" rows="auto, *">
-    <StackLayout row="0" *ngIf="!(state.landscape() && state.activeTab() === 'player')">
+    <StackLayout row="0" *ngIf="!(state.landscape() && state.activeTab() === 'player')" [width]="state.contentWidth()" [horizontalAlignment]="state.contentAlign()">
       <app-top-bar></app-top-bar>
     </StackLayout>
 
     <ScrollView *ngIf="state.activeTab() !== 'player'" row="1" class="screen-scroll" scrollBarIndicatorVisible="false">
-      <StackLayout>
+      <StackLayout [width]="state.contentWidth()" [horizontalAlignment]="state.contentAlign()">
         <StackLayout appEnter *ngIf="state.activeTab() === 'library' && !state.selectedBook()">
           <app-library-tab></app-library-tab>
         </StackLayout>
@@ -34,7 +34,9 @@
   </GridLayout>
 
   <StackLayout row="1">
-    <app-mini-player *ngIf="state.activeTab() !== 'player'"></app-mini-player>
+    <StackLayout [width]="state.contentWidth()" [horizontalAlignment]="state.contentAlign()">
+      <app-mini-player *ngIf="state.activeTab() !== 'player'"></app-mini-player>
+    </StackLayout>
     <app-bottom-nav></app-bottom-nav>
   </StackLayout>
 </GridLayout>

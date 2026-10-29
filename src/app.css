@@ -85,6 +85,18 @@
   color: #ffffff;
 }
 
+.net-badge {
+  background-color: transparent;
+  color: var(--ok-text);
+  font-size: 14;
+  margin-right: 12;
+}
+
+.net-badge.offline {
+  background-color: transparent;
+  color: var(--err-border);
+}
+
 .screen-scroll {
   background-color: var(--bg);
 }
@@ -208,8 +220,8 @@
 
 .progress-track {
   background-color: var(--chip);
-  border-radius: 4;
-  height: 8;
+  border-radius: 2;
+  height: 4;
 }
 
 .progress-fill {
@@ -280,6 +292,10 @@
 .mini-toggle-icon {
   color: #ffffff;
   font-size: 16;
+}
+
+.mini-fill {
+  background-color: var(--accent);
 }
 
 .mini-progress {
@@ -493,7 +509,9 @@
 }
 
 .player-slider {
-  color: var(--coral);
+  background-color: var(--chip);
+  color: var(--accent);
+  height: 40;
   margin-top: 10;
 }
 
@@ -502,7 +520,7 @@
 }
 
 .player-time {
-  color: var(--coral);
+  color: var(--accent);
   font-size: 11;
 }
 
@@ -522,8 +540,16 @@
   vertical-align: center;
 }
 
+.control-skip {
+  font-size: 36;
+}
+
+.control-seek {
+  font-size: 30;
+}
+
 .control-main {
-  background-color: var(--coral);
+  background-color: var(--accent);
   border-radius: 34;
   color: #ffffff;
   font-size: 22;
@@ -586,22 +612,108 @@
 }
 
 .player-eyebrow {
-  color: var(--coral);
+  color: var(--accent);
 }
 
 .player-art {
-  background-color: var(--err-bg);
-  border-color: var(--err-border);
-  border-radius: 72;
-  border-width: 2;
-  height: 144;
+  height: 190;
   horizontal-align: center;
-  margin: 12 0;
-  width: 144;
+  margin: 4 0;
+  width: 240;
+}
+
+.vinyl {
+  background-color: #0b0b10;
+  border-color: #23232e;
+  border-radius: 75;
+  border-width: 2;
+  height: 150;
+  horizontal-align: center;
+  margin-top: 36;
+  vertical-align: top;
+  width: 150;
+}
+
+.groove {
+  border-color: #1d1d27;
+  border-radius: 100;
+  border-width: 1;
+  horizontal-align: center;
+  vertical-align: center;
+}
+
+.groove-1 {
+  height: 132;
+  width: 132;
+}
+
+.groove-2 {
+  height: 112;
+  width: 112;
+}
+
+.groove-3 {
+  height: 92;
+  width: 92;
+}
+
+.vinyl-label {
+  border-radius: 28;
+  height: 56;
+  horizontal-align: center;
+  vertical-align: center;
+  width: 56;
+}
+
+.vinyl-hole {
+  background-color: var(--bg);
+  border-radius: 4;
+  height: 8;
+  horizontal-align: center;
+  vertical-align: center;
+  width: 8;
+}
+
+.tonearm {
+  height: 72;
+  horizontal-align: left;
+  margin: 62 0 0 202;
+  vertical-align: top;
+  width: 8;
+}
+
+.tonearm-rod {
+  background-color: #c9c4d6;
+  border-radius: 3;
+  height: 58;
+  horizontal-align: center;
+  vertical-align: top;
+  width: 5;
+}
+
+.tonearm-head {
+  background-color: var(--accent);
+  border-radius: 2;
+  height: 14;
+  horizontal-align: center;
+  vertical-align: bottom;
+  width: 10;
+}
+
+.tonearm-pivot {
+  background-color: var(--surface2);
+  border-color: #c9c4d6;
+  border-radius: 10;
+  border-width: 3;
+  height: 20;
+  horizontal-align: left;
+  margin: 52 0 0 196;
+  vertical-align: top;
+  width: 20;
 }
 
 .player-note {
-  color: var(--coral);
+  color: var(--accent);
   font-size: 56;
   text-align: center;
 }

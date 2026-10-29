@@ -9,7 +9,7 @@
       <Label [text]="player.playing() ? '❚❚' : '▶'" class="mini-toggle-icon" horizontalAlignment="center" verticalAlignment="center"></Label>
     </GridLayout>
   </GridLayout>
-  <GridLayout row="1" [columns]="progressColumns()" class="mini-progress">
-    <StackLayout col="0" class="progress-fill"></StackLayout>
+  <GridLayout row="1" class="mini-progress">
+    <StackLayout [scaleX]="fraction()" originX="0" class="mini-fill"></StackLayout>
   </GridLayout>
 </GridLayout>

@@ -19,9 +19,12 @@ export class ContinueCardComponent implements OnInit {
     this.catalog.refreshContinue();
   }
 
-  columns(book: Book): string {
-    const fraction = this.player.bookFraction(book);
-    return `${Math.max(fraction, 0.001)}*, ${Math.max(1 - fraction, 0.001)}*`;
+  // Progress of the current chapter, live when this book is loaded in the player, else from the saved position.
+  chapterFraction(book: Book): number {
+    const live = this.player.book()?.id === book.id;
+    const position = live ? this.player.positionMs() : this.player.resumeProgress(book).positionMs;
+    const duration = live ? this.player.durationMs() : this.player.resumeProgress(book).durationMs;
+    return duration > 0 ? Math.min(1, Math.max(0, position / duration)) : 0;
   }
 
   trackName(book: Book): string {

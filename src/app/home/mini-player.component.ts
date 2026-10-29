@@ -14,9 +14,8 @@ export class MiniPlayerComponent {
   readonly player = inject(PlayerService);
   readonly state = inject(AppStateService);
 
-  progressColumns(): string {
+  fraction(): number {
     const duration = this.player.durationMs();
-    const fraction = duration > 0 ? Math.min(1, this.player.positionMs() / duration) : 0;
-    return `${Math.max(fraction, 0.001)}*, ${Math.max(1 - fraction, 0.001)}*`;
+    return duration > 0 ? Math.min(1, Math.max(0, this.player.positionMs() / duration)) : 0;
   }
 }
