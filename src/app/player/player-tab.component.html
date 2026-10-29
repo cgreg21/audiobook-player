@@ -1,0 +1,77 @@
+<ng-template #art let-book>
+  <GridLayout class="player-art">
+    <Image [src]="book?.artwork || (book?.kind === 'podcast' ? 'res://cover_podcast' : 'res://cover_folder')" class="player-image" stretch="aspectFill"></Image>
+  </GridLayout>
+</ng-template>
+
+<ng-template #info let-book>
+  <Label [text]="book.tracks[player.trackIndex()]?.name" class="player-title" textWrap="true"></Label>
+  <Label [text]="book.title" class="player-description" textWrap="true"></Label>
+</ng-template>
+
+<ng-template #transport>
+  <Slider
+    [maxValue]="player.durationMs() || 1"
+    [value]="player.positionMs()"
+    (valueChange)="onSeek($any($event).value)"
+    class="player-slider"
+  ></Slider>
+  <GridLayout columns="*, *" class="player-times">
+    <Label col="0" [text]="formatTime(player.positionMs())" class="player-time"></Label>
+    <Label col="1" [text]="formatTime(player.durationMs())" class="player-time end"></Label>
+  </GridLayout>
+
+  <GridLayout columns="*, *, auto, *, *" class="player-controls">
+    <Label col="0" text="⏮" class="control" (tap)="player.skipTo(player.trackIndex() - 1)"></Label>
+    <Label col="1" text="↺ 15" class="control" (tap)="player.seekBy(-15000)"></Label>
+    <Label col="2" [text]="player.playing() ? '❚❚' : '▶'" class="control-main" (tap)="player.toggle()"></Label>
+    <Label col="3" text="30 ↻" class="control" (tap)="player.seekBy(30000)"></Label>
+    <Label col="4" text="⏭" class="control" (tap)="player.skipTo(player.trackIndex() + 1)"></Label>
+  </GridLayout>
+</ng-template>
+
+<ng-template #idleText>
+  <Label text="Aucun livre sélectionné" class="player-title"></Label>
+  <Label
+    text="Choisissez un livre dans votre bibliothèque pour commencer l’écoute."
+    class="player-description"
+    textWrap="true"
+  ></Label>
+  <Button text="Découvrir ma bibliothèque" class="primary-button player-button" (tap)="state.setTab('library')"></Button>
+</ng-template>
+
+<ng-container *ngIf="player.book() as book; else idle">
+  <StackLayout *ngIf="!state.landscape(); else wide" class="player-content">
+    <Label text="EN LECTURE" class="eyebrow player-eyebrow"></Label>
+    <ng-container *ngTemplateOutlet="art; context: { $implicit: book }"></ng-container>
+    <ng-container *ngTemplateOutlet="info; context: { $implicit: book }"></ng-container>
+    <ng-container *ngTemplateOutlet="transport"></ng-container>
+  </StackLayout>
+
+  <ng-template #wide>
+    <GridLayout columns="auto, *" class="player-content player-wide">
+      <ng-container *ngTemplateOutlet="art; context: { $implicit: book }"></ng-container>
+      <StackLayout col="1" class="player-side" verticalAlignment="center">
+        <ng-container *ngTemplateOutlet="info; context: { $implicit: book }"></ng-container>
+        <ng-container *ngTemplateOutlet="transport"></ng-container>
+      </StackLayout>
+    </GridLayout>
+  </ng-template>
+</ng-container>
+
+<ng-template #idle>
+  <StackLayout *ngIf="!state.landscape(); else idleWide" class="player-content">
+    <Label text="LECTEUR AUDIO" class="eyebrow player-eyebrow"></Label>
+    <ng-container *ngTemplateOutlet="art; context: { $implicit: null }"></ng-container>
+    <ng-container *ngTemplateOutlet="idleText"></ng-container>
+  </StackLayout>
+
+  <ng-template #idleWide>
+    <GridLayout columns="auto, *" class="player-content player-wide">
+      <ng-container *ngTemplateOutlet="art; context: { $implicit: null }"></ng-container>
+      <StackLayout col="1" class="player-side" verticalAlignment="center">
+        <ng-container *ngTemplateOutlet="idleText"></ng-container>
+      </StackLayout>
+    </GridLayout>
+  </ng-template>
+</ng-template>

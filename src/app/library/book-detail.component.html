@@ -1,0 +1,31 @@
+<StackLayout class="screen-content">
+  <Label text="‹  Bibliothèque" class="back-link" (tap)="state.closeBook()"></Label>
+  <Label [text]="book().title" class="detail-title" textWrap="true"></Label>
+  <Label [text]="catalog.bookSummary(book())" class="book-meta detail-meta"></Label>
+  <Button [text]="catalog.resumeLabel(book())" class="primary-button detail-play" (tap)="catalog.play(book())"></Button>
+
+  <GridLayout *ngIf="book().kind === 'podcast'" columns="*, *" class="detail-actions">
+    <Button
+      col="0"
+      [text]="catalog.isBusy(book().id) ? 'Actualisation…' : 'Actualiser'"
+      [isEnabled]="!catalog.isBusy(book().id)"
+      class="secondary-button"
+      (tap)="refresh()"
+    ></Button>
+    <Button col="1" text="Se désabonner" class="secondary-button danger" (tap)="unsubscribe()"></Button>
+  </GridLayout>
+
+  <GridLayout *ngFor="let track of book().tracks; let i = index" columns="auto, *, auto" class="track-row" [class.current]="player.book()?.id === book().id && player.trackIndex() === i">
+    <Label col="0" [text]="i + 1" class="track-index" (tap)="catalog.play(book(), i)"></Label>
+    <Label col="1" [text]="track.name" class="track-title" textWrap="true" (tap)="catalog.play(book(), i)"></Label>
+    <Button
+      *ngIf="book().kind === 'podcast'"
+      col="2"
+      [text]="catalog.isBusy(book().id + '|' + track.id) ? '…' : track.downloaded ? '✓ Hors ligne' : '↓ Télécharger'"
+      [isEnabled]="!catalog.isBusy(book().id + '|' + track.id)"
+      class="download-button"
+      [class.done]="track.downloaded"
+      (tap)="toggleDownload(track)"
+    ></Button>
+  </GridLayout>
+</StackLayout>

@@ -1,8 +1,40 @@
-<ActionBar>
-  <Label text="Home"></Label>
-</ActionBar>
+<GridLayout
+  rows="*, auto"
+  class="app-shell"
+  [class.theme-light]="settings.isLight()"
+  [class.accent-coral]="settings.accent() === 'coral'"
+  [class.accent-emerald]="settings.accent() === 'emerald'"
+  [class.accent-blue]="settings.accent() === 'blue'"
+>
+  <GridLayout row="0" rows="auto, *">
+    <StackLayout row="0" *ngIf="!(state.landscape() && state.activeTab() === 'player')">
+      <app-top-bar></app-top-bar>
+    </StackLayout>
 
-<GridLayout>
-  <!-- Add your page content here -->
-  <Label text="Hello" class="text-lg text-center"></Label>
+    <ScrollView *ngIf="state.activeTab() !== 'player'" row="1" class="screen-scroll" scrollBarIndicatorVisible="false">
+      <StackLayout>
+        <StackLayout appEnter *ngIf="state.activeTab() === 'library' && !state.selectedBook()">
+          <app-library-tab></app-library-tab>
+        </StackLayout>
+        <StackLayout appEnter *ngIf="state.activeTab() === 'library' && state.selectedBook() as book">
+          <app-book-detail [book]="book"></app-book-detail>
+        </StackLayout>
+        <StackLayout appEnter *ngIf="state.activeTab() === 'podcasts'">
+          <app-podcasts-tab></app-podcasts-tab>
+        </StackLayout>
+        <StackLayout appEnter *ngIf="state.activeTab() === 'options'">
+          <app-options-tab></app-options-tab>
+        </StackLayout>
+      </StackLayout>
+    </ScrollView>
+
+    <GridLayout appEnter *ngIf="state.activeTab() === 'player'" row="1" class="screen-scroll">
+      <app-player-tab></app-player-tab>
+    </GridLayout>
+  </GridLayout>
+
+  <StackLayout row="1">
+    <app-mini-player *ngIf="state.activeTab() !== 'player'"></app-mini-player>
+    <app-bottom-nav></app-bottom-nav>
+  </StackLayout>
 </GridLayout>

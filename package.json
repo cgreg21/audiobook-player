@@ -20,6 +20,7 @@
   "devDependencies": {
     "@angular-devkit/build-angular": "~22.0.0",
     "@angular/compiler-cli": "~22.0.0",
+    "@nativescript/android": "9.1.1",
     "@nativescript/tailwind": "^2.1.0",
     "@nativescript/types": "~9.0.0",
     "@nativescript/webpack": "~5.0.25",

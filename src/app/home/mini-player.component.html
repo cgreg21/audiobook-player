@@ -1,0 +1,15 @@
+<GridLayout appEnter *ngIf="player.book() as book" rows="auto, auto" class="mini-player">
+  <GridLayout row="0" columns="auto, *, auto" class="mini-main" (tap)="state.setTab('player')">
+    <Image col="0" [src]="book.artwork || (book.kind === 'podcast' ? 'res://cover_podcast' : 'res://cover_folder')" class="mini-cover" stretch="aspectFill"></Image>
+    <StackLayout col="1" verticalAlignment="center">
+      <Label [text]="book.tracks[player.trackIndex()]?.name" class="mini-title"></Label>
+      <Label [text]="book.title" class="mini-subtitle"></Label>
+    </StackLayout>
+    <GridLayout appPress col="2" class="mini-toggle" verticalAlignment="center" (tap)="player.toggle()">
+      <Label [text]="player.playing() ? '❚❚' : '▶'" class="mini-toggle-icon" horizontalAlignment="center" verticalAlignment="center"></Label>
+    </GridLayout>
+  </GridLayout>
+  <GridLayout row="1" [columns]="progressColumns()" class="mini-progress">
+    <StackLayout col="0" class="progress-fill"></StackLayout>
+  </GridLayout>
+</GridLayout>

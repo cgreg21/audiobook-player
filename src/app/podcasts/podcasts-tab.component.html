@@ -1,0 +1,41 @@
+<StackLayout class="screen-content">
+  <GridLayout columns="*, auto" class="search-bar">
+    <TextField
+      #searchField
+      col="0"
+      hint="Rechercher un podcast Apple"
+      returnKeyType="search"
+      class="search-input"
+      (returnPress)="search($any(searchField).text)"
+    ></TextField>
+    <Button col="1" text="Chercher" class="search-button" (tap)="search($any(searchField).text)"></Button>
+  </GridLayout>
+
+  <StackLayout *ngIf="catalog.subscribedBooks().length && !catalog.searchResults().length && !searching()">
+    <Label text="MES ABONNEMENTS" class="eyebrow"></Label>
+    <app-book-row *ngFor="let book of catalog.subscribedBooks()" [book]="book" (opened)="state.openBook(book)"></app-book-row>
+  </StackLayout>
+
+  <ActivityIndicator *ngIf="searching()" busy="true" class="search-spinner"></ActivityIndicator>
+  <Label
+    *ngIf="catalog.searched() && !searching() && !catalog.searchResults().length"
+    text="Aucun podcast trouvé."
+    class="empty-description"
+  ></Label>
+
+  <GridLayout *ngFor="let result of catalog.searchResults()" columns="auto, *, auto" class="book-row">
+    <Image col="0" [src]="result.artwork" class="book-cover" stretch="aspectFill"></Image>
+    <StackLayout col="1" verticalAlignment="center">
+      <Label [text]="result.title" class="book-title" textWrap="true"></Label>
+      <Label [text]="result.author" class="book-meta"></Label>
+    </StackLayout>
+    <Button
+      col="2"
+      [text]="isSubscribed(result) ? '✓ Suivi' : catalog.isBusy(result.feedUrl) ? '…' : '＋ Suivre'"
+      [isEnabled]="!isSubscribed(result) && !catalog.isBusy(result.feedUrl)"
+      class="download-button"
+      [class.done]="isSubscribed(result)"
+      (tap)="subscribe(result)"
+    ></Button>
+  </GridLayout>
+</StackLayout>

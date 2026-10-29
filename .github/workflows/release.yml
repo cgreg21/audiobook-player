@@ -1,0 +1,69 @@
+name: Release Android APK
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - run: npm ci
+
+      # Keystore auto-signé : fourni via le secret KEYSTORE_BASE64, sinon généré à la volée.
+      # Pour que les mises à jour s'installent par-dessus, définir les secrets (même clé à chaque release).
+      - name: Prepare keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            echo "STORE_PASS=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+          else
+            keytool -genkeypair -v -keystore "$RUNNER_TEMP/release.jks" -alias release \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass audiobook -keypass audiobook \
+              -dname "CN=Audiobook Player, O=Self, C=FR"
+            echo "STORE_PASS=audiobook" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build signed APK
+        run: >
+          npx ns build android --release
+          --key-store-path "$RUNNER_TEMP/release.jks"
+          --key-store-password "$STORE_PASS"
+          --key-store-alias release
+          --key-store-alias-password "$STORE_PASS"
+
+      - name: Locate APK
+        run: |
+          APK=$(find platforms/android -name '*release*.apk' | head -n1)
+          mkdir -p dist && cp "$APK" dist/audiobook-player.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: audiobook-player-apk
+          path: dist/audiobook-player.apk
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/audiobook-player.apk
