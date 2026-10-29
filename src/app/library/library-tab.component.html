@@ -12,15 +12,19 @@
     <Label [text]="progress.label" class="book-meta library-progress-label" textWrap="false"></Label>
   </StackLayout>
 
-  <GridLayout columns="*, auto" class="section-heading">
+  <GridLayout columns="*, auto, auto" class="section-heading">
     <StackLayout col="0" verticalAlignment="center">
       <Label text="Ma collection" class="section-title"></Label>
     </StackLayout>
-    <Button col="1" [text]="filterLabel() + '  \u25BE'" class="option-chip filter-chip active" verticalAlignment="center" (tap)="pickFilter()"></Button>
+    <Button col="1" [text]="'Groupe : ' + groupingLabel() + '  \u25BE'" class="option-chip filter-chip active" verticalAlignment="center" (tap)="pickGrouping()"></Button>
+    <Button col="2" [text]="filterLabel() + '  \u25BE'" class="option-chip filter-chip active" verticalAlignment="center" (tap)="pickFilter()"></Button>
   </GridLayout>
 
   <StackLayout *ngIf="catalog.books().length">
-    <app-book-row *ngFor="let book of visibleBooks()" [book]="book" (opened)="state.selectedBook.set(book)"></app-book-row>
+    <StackLayout *ngFor="let group of groups()">
+      <Label *ngIf="group.label" [text]="group.label + ' (' + group.books.length + ')'" class="section-title group-title"></Label>
+      <app-book-row *ngFor="let book of group.books" [book]="book" (opened)="state.selectedBook.set(book)"></app-book-row>
+    </StackLayout>
     <Label *ngIf="!visibleBooks().length" text="Aucun élément pour ce filtre." class="empty-description"></Label>
   </StackLayout>
 

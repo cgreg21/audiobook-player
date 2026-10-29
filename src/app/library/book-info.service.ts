@@ -1,10 +1,19 @@
 import { Injectable } from '@angular/core';
 import { Http } from '@nativescript/core';
+import type { Chapter } from './library.service';
 
 export interface BookInfo {
+  asin?: string;
   title?: string;
   author?: string;
   coverUrl?: string;
+  narrators?: string[];
+  series?: string;
+  seriesPosition?: string;
+  genres?: string[];
+  publisher?: string;
+  language?: string;
+  chapters?: Chapter[];
 }
 
 const REGION = 'fr';
@@ -20,21 +29,33 @@ export class BookInfoService {
       () => this.itunes(title, author),
     ];
     for (const source of sources) {
-      if ((!need.author || found.author) && (!need.cover || found.coverUrl)) {
+      if ((!need.author || found.author) && (!need.cover || found.coverUrl) && found.asin) {
         break;
       }
       try {
         const info = await source();
         if (info) {
-          found.author ||= info.author;
-          found.coverUrl ||= info.coverUrl;
-          found.title ||= info.title;
+          this.merge(found, info);
         }
       } catch {
         // Source indisponible : on passe à la suivante.
       }
     }
     return found;
+  }
+
+  private merge(found: BookInfo, info: BookInfo): void {
+    found.title ||= info.title;
+    found.author ||= info.author;
+    found.coverUrl ||= info.coverUrl;
+    found.asin ||= info.asin;
+    found.narrators ||= info.narrators;
+    found.series ||= info.series;
+    found.seriesPosition ||= info.seriesPosition;
+    found.genres ||= info.genres;
+    found.publisher ||= info.publisher;
+    found.language ||= info.language;
+    found.chapters ||= info.chapters;
   }
 
   async downloadCover(url: string, path: string): Promise<boolean> {
@@ -55,11 +76,37 @@ export class BookInfoService {
     if (!product?.asin) {
       return null;
     }
-    const book = await this.getJson(`https://api.audnex.us/books/${product.asin}?region=${REGION}`);
+    const asin: string = product.asin;
+    const book = await this.getJson(`https://api.audnex.us/books/${asin}?region=${REGION}`);
     if (!book) {
       return null;
     }
-    return { title: book.title, author: book.authors?.[0]?.name, coverUrl: book.image };
+    return {
+      asin,
+      title: book.title,
+      author: book.authors?.[0]?.name,
+      coverUrl: book.image,
+      narrators: this.names(book.narrators),
+      series: book.seriesPrimary?.name,
+      seriesPosition: book.seriesPrimary?.position?.toString(),
+      genres: this.names(book.genres?.filter((g: any) => !g.type || g.type === 'genre')),
+      publisher: book.publisherName,
+      language: book.language,
+      chapters: await this.audnexusChapters(asin),
+    };
+  }
+
+  private async audnexusChapters(asin: string): Promise<Chapter[] | undefined> {
+    const data = await this.getJson(`https://api.audnex.us/books/${asin}/chapters?region=${REGION}`);
+    const chapters: Chapter[] = (data?.chapters ?? [])
+      .map((c: any) => ({ title: String(c.title ?? '').trim(), startMs: Number(c.startOffsetMs ?? 0) }))
+      .filter((c: Chapter) => c.title);
+    return chapters.length ? chapters : undefined;
+  }
+
+  private names(list: { name?: string }[] | undefined): string[] | undefined {
+    const names = (list ?? []).map((item) => item.name ?? '').filter(Boolean);
+    return names.length ? names : undefined;
   }
 
   private async openLibrary(title: string, author?: string): Promise<BookInfo | null> {

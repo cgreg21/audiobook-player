@@ -3,7 +3,7 @@ import { Application } from '@nativescript/core';
 import { AppStateService } from '../core/app-state.service';
 import { DatabaseService } from '../data/database.service';
 import { PlayerService } from '../player/player.service';
-import { Book, BookTags, LibraryService } from './library.service';
+import { Book, BookTags, LibraryService, TAGS_VERSION } from './library.service';
 import { BookInfoService } from './book-info.service';
 import { PodcastResult, PodcastService } from './podcast.service';
 import { DownloadQueueService } from './download-queue.service';
@@ -78,21 +78,31 @@ export class CatalogService {
 
   private needsInfo(book: Book): boolean {
     const tags = this.library.cachedTags(book);
-    return !tags || (!tags.online && (!tags.artwork || !tags.author) && this.state.online());
+    return !tags || tags.version !== TAGS_VERSION || (!tags.online && (!tags.artwork || !tags.author) && this.state.online());
   }
 
   private async collectInfo(book: Book): Promise<BookTags> {
     const cached = this.library.cachedTags(book);
     const tags = cached ?? (await this.library.readTags(book));
-    const needAuthor = !tags.author;
-    const needCover = !tags.artwork;
-    if ((needAuthor || needCover) && this.state.online()) {
-      const info = await this.bookInfo.lookup(tags.title || book.title, tags.author, { author: needAuthor, cover: needCover });
-      tags.author ||= info.author;
-      if (needCover && info.coverUrl && (await this.bookInfo.downloadCover(info.coverUrl, this.library.coverPath(book.id)))) {
-        tags.artwork = this.library.coverPath(book.id);
+    if (this.state.online()) {
+      const info = await this.bookInfo.lookup(tags.title || book.title, tags.author, { author: !tags.author, cover: true });
+      tags.title = info.title || tags.title;
+      tags.author = info.author || tags.author;
+      tags.series = info.series ?? tags.series;
+      tags.seriesPosition = info.seriesPosition ?? tags.seriesPosition;
+      tags.narrators = info.narrators ?? tags.narrators;
+      tags.genres = info.genres ?? tags.genres;
+      tags.publisher = info.publisher ?? tags.publisher;
+      tags.language = info.language ?? tags.language;
+      tags.chapters = info.chapters ?? tags.chapters;
+      if (info.chapters && info.chapters.length === book.tracks.length) {
+        tags.names = info.chapters.map((c) => c.title);
+      }
+      if (info.coverUrl && (await this.bookInfo.downloadCover(info.coverUrl, this.library.coverPath(book.id, 'api')))) {
+        tags.artwork = this.library.coverPath(book.id, 'api');
       }
       tags.online = true;
+      tags.version = TAGS_VERSION;
     }
     return tags;
   }

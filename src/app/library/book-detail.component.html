@@ -4,6 +4,13 @@
   <Label [text]="catalog.bookSummary(book())" class="book-meta detail-meta"></Label>
   <Button [text]="catalog.resumeLabel(book())" class="primary-button detail-play" (tap)="catalog.play(book())"></Button>
 
+  <StackLayout *ngIf="book().series || book().narrators?.length || book().genres?.length || book().publisher" class="detail-info">
+    <Label *ngIf="book().series" [text]="'Saga : ' + book().series + (book().seriesPosition ? ' #' + book().seriesPosition : '')" class="book-meta" textWrap="true"></Label>
+    <Label *ngIf="book().narrators?.length" [text]="'Narrateur : ' + book().narrators!.join(', ')" class="book-meta" textWrap="true"></Label>
+    <Label *ngIf="book().genres?.length" [text]="'Catégories : ' + book().genres!.join(', ')" class="book-meta" textWrap="true"></Label>
+    <Label *ngIf="book().publisher" [text]="'Éditeur : ' + book().publisher" class="book-meta" textWrap="true"></Label>
+  </StackLayout>
+
   <GridLayout *ngIf="book().kind === 'podcast'" columns="*, *, *" class="detail-actions">
     <Button
       col="0"
@@ -50,4 +57,13 @@
   </GridLayout>
   </ng-container>
   </ng-container>
+
+  <StackLayout *ngIf="book().chapters?.length" class="chapter-list">
+    <Label text="Chapitres" class="section-title"></Label>
+    <GridLayout *ngFor="let chapter of book().chapters; let n = index" columns="auto, *, auto" class="track-row">
+      <Label col="0" [text]="n + 1" class="track-index"></Label>
+      <Label col="1" [text]="chapter.title" class="track-title" textWrap="true"></Label>
+      <Label col="2" [text]="formatTime(chapter.startMs)" class="book-meta" verticalAlignment="center"></Label>
+    </GridLayout>
+  </StackLayout>
 </StackLayout>

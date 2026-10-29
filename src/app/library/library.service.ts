@@ -10,6 +10,11 @@ export interface Track {
   downloaded?: boolean;
 }
 
+export interface Chapter {
+  title: string;
+  startMs: number;
+}
+
 export interface Book {
   id: string;
   title: string;
@@ -18,17 +23,35 @@ export interface Book {
   artwork?: string;
   author?: string;
   addedAt?: number;
+  series?: string;
+  seriesPosition?: string;
+  narrators?: string[];
+  genres?: string[];
+  publisher?: string;
+  language?: string;
+  chapters?: Chapter[];
 }
 
 // Informations d'un livre issues des tags des fichiers puis, si besoin, des API en ligne.
 export interface BookTags {
   sig: string;
+  version?: number;
   title?: string;
   author?: string;
   artwork?: string;
   names?: string[];
   online?: boolean;
+  series?: string;
+  seriesPosition?: string;
+  narrators?: string[];
+  genres?: string[];
+  publisher?: string;
+  language?: string;
+  chapters?: Chapter[];
 }
+
+// Incrémenter pour refaire la recherche en ligne des livres déjà traités.
+export const TAGS_VERSION = 2;
 
 const PICK_REQUEST = 4201;
 export const PODCASTS_DIR = 'Podcasts';
@@ -95,6 +118,13 @@ export class LibraryService {
       title: tags.title || book.title,
       author: tags.author || book.author,
       artwork: tags.artwork || book.artwork,
+      series: tags.series,
+      seriesPosition: tags.seriesPosition,
+      narrators: tags.narrators,
+      genres: tags.genres,
+      publisher: tags.publisher,
+      language: tags.language,
+      chapters: tags.chapters,
     };
   }
 
@@ -140,10 +170,10 @@ export class LibraryService {
     return tags;
   }
 
-  coverPath(bookId: string): string {
+  coverPath(bookId: string, suffix = ''): string {
     const dir = new java.io.File(Utils.android.getApplicationContext().getFilesDir(), 'covers');
     dir.mkdirs();
-    return `${dir.getAbsolutePath()}/${Math.abs(new java.lang.String(bookId).hashCode())}.jpg`;
+    return `${dir.getAbsolutePath()}/${Math.abs(new java.lang.String(bookId).hashCode())}${suffix ? `-${suffix}` : ''}.jpg`;
   }
 
   private saveCover(bookId: string, bytes: any): string | undefined {

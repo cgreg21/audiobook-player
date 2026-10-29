@@ -20,6 +20,12 @@ export class PodcastsTabComponent {
   readonly queue = inject(DownloadQueueService);
   readonly searching = signal(false);
 
+  constructor() {
+    this.catalog.searchResults.set([]);
+    this.catalog.searched.set(false);
+    void this.catalog.refreshFeeds();
+  }
+
   async search(term: string): Promise<void> {
     const query = term?.trim();
     if (!query) {

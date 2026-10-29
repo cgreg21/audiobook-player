@@ -5,6 +5,8 @@ import android.content.Intent;
 import androidx.annotation.Nullable;
 import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.Player;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.session.MediaSession;
 import androidx.media3.session.MediaSessionService;
@@ -24,6 +26,14 @@ public class PlaybackService extends MediaSessionService {
                         .build(), true)
                 .setHandleAudioBecomingNoisy(true)
                 .build();
+        player.addListener(new Player.Listener() {
+            @Override
+            public void onMediaItemTransition(@Nullable MediaItem mediaItem, int reason) {
+                if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) {
+                    player.seekTo(0);
+                }
+            }
+        });
         session = new MediaSession.Builder(this, player).build();
     }
 
@@ -35,9 +45,8 @@ public class PlaybackService extends MediaSessionService {
 
     @Override
     public void onTaskRemoved(@Nullable Intent rootIntent) {
-        if (!player.getPlayWhenReady() || player.getMediaItemCount() == 0) {
-            stopSelf();
-        }
+        player.pause();
+        stopSelf();
     }
 
     @Override
