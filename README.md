@@ -2,10 +2,10 @@
 
 Lecteur de livres audio hors-ligne, sans serveur, pour fichiers MP3 locaux.
 
-## Migration Android native
+## Application Android native
 
-La nouvelle application Kotlin autonome se trouve dans `android-native/`. Elle reprend
-déjà l’import persistant d’un dossier audio, le scan des livres, la lecture en arrière-plan
+L’application Kotlin autonome se trouve dans `android-native/`. Elle propose
+l’import persistant d’un dossier audio, le scan des livres, la lecture en arrière-plan
 avec Media3, la sauvegarde SQLite de la progression, ainsi que la recherche Apple Podcasts,
 les abonnements et la synchronisation des épisodes. Les épisodes peuvent aussi être
 téléchargés, mis en pause, repris ou annulés; les réglages de stockage, réseau mobile et
@@ -92,5 +92,8 @@ $env:JAVA_HOME = '<chemin vers Android Studio>\jbr'
 
 Un JDK 17 ou plus récent est nécessaire.
 
-Le projet NativeScript reste présent temporairement pendant le portage des fonctions
-restantes ; la version Android native sera la cible à terme.
+Le dépôt contient uniquement l’application Android native. Les anciennes sources
+NativeScript/Angular, leurs ressources Android/iOS et la configuration npm ont été retirées.
+Node.js et NativeScript ne sont pas nécessaires pour construire l’application.
+L’identifiant `org.nativescript.audiobookplayer` est conservé pour maintenir la continuité
+des installations et des données existantes.
