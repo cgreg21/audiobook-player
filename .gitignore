@@ -3,6 +3,12 @@ hooks/
 node_modules/
 platforms/
 
+# Android Gradle
+android-native/.gradle/
+android-native/build/
+android-native/app/build/
+android-native/local.properties
+
 # Logs
 logs
 *.log

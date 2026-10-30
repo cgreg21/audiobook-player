@@ -50,59 +50,42 @@ jobs:
           cat "$RUNNER_TEMP/changelog.md"
           echo "Version: $TAG (précédente: $LAST)"
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      - name: Apply version
-        run: |
-          npm version "$VERSION" --no-git-tag-version --allow-same-version
-          sed -i -E "s/versionCode [0-9]+/versionCode ${{ github.run_number }}/; s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" App_Resources/Android/app.gradle
-
-      - run: npm ci
-
-      - run: npm install -g nativescript@9
-
-      # Le doctor NativeScript exige l'émulateur et les composants SDK ciblés
       - name: Install Android SDK components
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "emulator" "platforms;android-36" "build-tools;36.0.0"
-      # Keystore auto-signé : fourni via le secret KEYSTORE_BASE64, sinon généré à la volée.
-      # Pour que les mises à jour s'installent par-dessus, définir les secrets (même clé à chaque release).
-      - name: Prepare keystore
+
+      - name: Validate release signing secrets
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
-          if [ -n "$KEYSTORE_BASE64" ]; then
-            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
-            echo "STORE_PASS=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
-          else
-            keytool -genkeypair -v -keystore "$RUNNER_TEMP/release.jks" -alias release \
-              -keyalg RSA -keysize 2048 -validity 10000 \
-              -storepass audiobook -keypass audiobook \
-              -dname "CN=Audiobook Player, O=Self, C=FR"
-            echo "STORE_PASS=audiobook" >> "$GITHUB_ENV"
-          fi
+          test -n "$KEYSTORE_BASE64" || { echo "::error::Configure KEYSTORE_BASE64 with the persistent Android release keystore."; exit 1; }
+          test -n "$KEYSTORE_PASSWORD" || { echo "::error::Configure KEYSTORE_PASSWORD for the release keystore."; exit 1; }
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          keytool -list -keystore "$RUNNER_TEMP/release.jks" -storepass "$KEYSTORE_PASSWORD" -alias release > /dev/null
 
-      - name: Build signed APK
-        run: >
-          ns build android --release
-          --key-store-path "$RUNNER_TEMP/release.jks"
-          --key-store-password "$STORE_PASS"
-          --key-store-alias release
-          --key-store-alias-password "$STORE_PASS"
+      - name: Build signed native APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          bash ./android-native/gradlew -p android-native :app:assembleRelease \
+            -PappVersionCode="${{ github.run_number }}" \
+            -PappVersionName="$VERSION" \
+            -PreleaseStoreFile="$RUNNER_TEMP/release.jks" \
+            -PreleaseStorePassword="$KEYSTORE_PASSWORD" \
+            -PreleaseKeyAlias=release \
+            -PreleaseKeyPassword="$KEYSTORE_PASSWORD"
 
       - name: Locate APK
         run: |
-          APK=$(find platforms/android -name '*release*.apk' | head -n1)
+          APK=android-native/app/build/outputs/apk/release/app-release.apk
+          test -s "$APK"
           mkdir -p dist && cp "$APK" "dist/audiobook-player-$TAG.apk"
 
       - name: Publish release
@@ -115,16 +98,14 @@ jobs:
           body_path: ${{ runner.temp }}/changelog.md
           files: dist/audiobook-player-${{ env.TAG }}.apk
 
-      # Reporte le numéro de version dans les sources pour que les builds locaux l'affichent aussi
+      # Persist the release version in the native Android project.
       - name: Commit version bump
         if: github.ref_type == 'branch'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -- . 2>/dev/null || true
-          npm version "$VERSION" --no-git-tag-version --allow-same-version
-          sed -i -E "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" App_Resources/Android/app.gradle
-          git add package.json package-lock.json App_Resources/Android/app.gradle
+          sed -i -E "s/versionName = \"[^\"]*\"/versionName = \"$VERSION\"/" android-native/app/build.gradle.kts
+          git add android-native/app/build.gradle.kts
           git diff --cached --quiet || git commit -m "chore: version $VERSION [skip ci]"
           git pull --rebase origin "${{ github.ref_name }}"
           git push origin "HEAD:${{ github.ref_name }}"
